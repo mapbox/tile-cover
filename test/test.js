@@ -7,4 +7,5 @@ test('uk', function(t){
 
   t.ok(cover.geojson(uk.geometry), 'uk geojson');
   //t.ok(cover.tiles(uk.geometry), 'uk tiles');
+  t.end()
 });
