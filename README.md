@@ -18,3 +18,7 @@ Input:
 Output:
 
 ![img](https://dl.dropbox.com/s/8fjof4uep86hwlc/Screenshot%202014-08-05%2016.21.24.png)
+
+Input/Output:
+
+![img](https://dl.dropbox.com/s/py6yywfxnenx4ks/Screenshot%202014-08-05%2016.29.17.png)
