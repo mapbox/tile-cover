@@ -24,5 +24,12 @@
   "bugs": {
     "url": "https://github.com/morganherlocker/tile-cover/issues"
   },
-  "homepage": "https://github.com/morganherlocker/tile-cover"
+  "homepage": "https://github.com/morganherlocker/tile-cover",
+  "devDependencies": {
+    "tape": "^2.14.0"
+  },
+  "dependencies": {
+    "turf-bbox-polygon": "^0.1.5",
+    "turf-intersect": "0.0.0"
+  }
 }
