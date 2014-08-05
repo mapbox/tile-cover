@@ -1,0 +1,28 @@
+{
+  "name": "tile-cover",
+  "version": "0.0.0",
+  "description": "generate the minimum number of tiles to cover a geojson geometry",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node test/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/morganherlocker/tile-cover.git"
+  },
+  "keywords": [
+    "tile",
+    "cover",
+    "geojson",
+    "index"
+  ],
+  "author": "morganherlocker",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/morganherlocker/tile-cover/issues"
+  },
+  "homepage": "https://github.com/morganherlocker/tile-cover"
+}
