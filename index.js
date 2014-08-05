@@ -15,42 +15,48 @@ module.exports.geojson = function(geom) {
   } else if(geom.type === 'Polygon') {
     var seed = [0,0,0]
 
-    console.log('splitting...')
     var locked = []
     splitSeek(seed, geom, locked, limits)
     
+    var tileFeatures = locked.map(function(t){
+        return tileToGeojson(t[0], t[1], t[2])
+    });
     return {
       type: 'FeatureCollection',
-      features: locked.map(function(t){
-        
-      })
+      features: tileFeatures
+    }
   }
 }
 
+module.exports.tiles = function(geom) {
+  if(geom.type === 'Point') {
+
+  } else if(geom.type === 'LineString') {
+
+  } else if(geom.type === 'Polygon') {
+    var seed = [0,0,0]
+
+    var locked = []
+    splitSeek(seed, geom, locked, limits)
+    
+    return locked;
+  }
+}
+
+
 function splitSeek(tile, geom, locked, limits){
   var tileCovers = true;
-  //console.log(JSON.stringify(fc(tileToGeojson(tile[0],tile[1],tile[2]))))
-  //console.log(JSON.stringify(fc(tileToGeojson(tile[0],tile[1],tile[2]))))
-  //console.log(JSON.stringify(fc(feature(geom))))
-  console.log('-------')
-  console.log(tile)
-
   var intersects = intersect(fc(tileToGeojson(tile[0],tile[1],tile[2])), fc(feature(geom)));
   if(intersects.features[0].type === 'GeometryCollection'){
     tileCovers = false;
   }
 
-  console.log(tileCovers)
-
   if(tile[2] === 0 || (tileCovers && tile[2] < limits.max_zoom)){
-    console.log('split: ' + tile)
     var children = getChildren(tile);
-
     children.forEach(function(t){
       splitSeek(t, geom, locked, limits);
     })
   } else if(tileCovers){
-    console.log('locking: ' + tile)
     locked.push(tile);
   }
 }
