@@ -98,3 +98,22 @@ function getChildren(tile){
     [tile[0]*2, tile[1]*2+1, tile[2]+1],
   ]
 }
+
+function getParent(tile){
+  // bottom left
+  if(tile[0]%2===0 && tile[1]%2===0){
+    return [tile[0]/2, tile[1]/2, tile[2]-1]
+  } 
+  // top left
+  else if(tile[0]%2===0){
+    return [tile[0]/2, (tile[1]-1)/2, tile[2]-1]
+  }
+  // bottom right
+  else if(tile[1]%2===0){
+    return (tile[0]-1)/2, (tile[1])/2, tile[2]-1]
+  }
+  // top right
+  else {
+    return (tile[0]-1)/2, (tile[1]-1)/2, tile[2]-1]
+  }
+}
