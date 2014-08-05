@@ -3,6 +3,13 @@ tile-cover
 
 generate the minimum number of tiles to cover a geojson geometry
 
+###install
+
+```bash
+npm install tile-cover
+```
+
+###usage
 
 ```js
 var poly = JSON.parse(fs.readFileSync('./poly.geojson'));
