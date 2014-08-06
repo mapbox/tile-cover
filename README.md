@@ -13,8 +13,13 @@ npm install tile-cover
 
 ```js
 var poly = JSON.parse(fs.readFileSync('./poly.geojson'));
-cover.geojson(poly.geometry);
-cover.geojson(poly.tiles);
+var limits = {
+  	min_zoom: 4,
+  	max_zoom: 9
+  }
+
+cover.geojson(poly, limits);
+cover.tiles(poly, limits);
 ```
 
 Polygons:
