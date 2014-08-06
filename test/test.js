@@ -26,7 +26,32 @@ test('line', function(t){
 
   t.ok(cover.geojson(line.geometry, limits), 'line geojson');
   t.ok(cover.tiles(line.geometry, limits).length, 'line tiles');
-  t.ok(cover.indexes(line.geometry, limits).length, 'uk indexes');
+  t.ok(cover.indexes(line.geometry, limits).length, 'line indexes');
   fs.writeFileSync(__dirname+'/fixtures/line_out.geojson', JSON.stringify(cover.geojson(line.geometry, limits)));
+  t.end()
+});
+
+test('point', function(t){
+  var point = {
+      "type": "Feature",
+      "properties": {},
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.08096313476562,
+          21.135184856708992
+        ]
+      }
+    }
+  var limits = {
+  	min_zoom: 1,
+  	max_zoom: 15
+  }
+
+
+  t.ok(cover.geojson(point.geometry, limits), 'point geojson');
+  t.ok(cover.tiles(point.geometry, limits).length, 'point tiles');
+  t.ok(cover.indexes(point.geometry, limits).length, 'point indexes');
+  fs.writeFileSync(__dirname+'/fixtures/point_out.geojson', JSON.stringify(cover.geojson(point.geometry, limits)));
   t.end()
 });

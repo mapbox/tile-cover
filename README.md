@@ -30,3 +30,7 @@ Polygons:
 Lines:
 
 ![img](https://dl.dropbox.com/s/u32bq56adqwhpyy/Screenshot%202014-08-06%2013.30.31.png)
+
+Points:
+
+![img](https://dl.dropbox.com/s/7kkmmm8owg1ezb0/Screenshot%202014-08-06%2014.02.01.png)
