@@ -3,13 +3,13 @@ tile-cover
 
 generate the minimum number of tiles to cover a geojson geometry
 
-###install
+###Install
 
 ```bash
 npm install tile-cover
 ```
 
-###usage
+###Usage
 
 ```js
 var poly = JSON.parse(fs.readFileSync('./poly.geojson'));
@@ -23,7 +23,7 @@ cover.tiles(poly, limits);
 cover.indexes(poly, limits);
 ```
 
-###examples
+###Examples
 
 #####Polygons:
 
