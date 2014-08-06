@@ -1,5 +1,4 @@
-var isInside = require('turf-inside'),
-  bboxPolygon = require('turf-bbox-polygon'),
+var bboxPolygon = require('turf-bbox-polygon'),
   intersect = require('turf-intersect');
 
 module.exports.geojson = function(geom, limits) {
