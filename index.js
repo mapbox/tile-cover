@@ -128,7 +128,7 @@ function getParent(tile){
   // top left
   if(tile[0]%2===0 && tile[1]%2===0){
     return [tile[0]/2, tile[1]/2, tile[2]-1];
-  } 
+  }
   // bottom left
   else if((tile[0]%2===0) && (!tile[1]%2===0)){
     return [tile[0]/2, (tile[1]-1)/2, tile[2]-1];
