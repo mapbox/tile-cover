@@ -1,61 +1,34 @@
-/*
-tile: x,y,z
-
-quad:
-00 | 10
--------
-01 | 11
-*/ 
-
 var isInside = require('turf-inside'),
     bboxPolygon = require('turf-bbox-polygon'),
     intersect = require('turf-intersect')
 
-var limits = {
-  min_zoom: 7,
-  max_zoom: 9
-};
+module.exports.geojson = function(geom, limits) {
+  var seed = [0,0,0];
+  var locked = [];
 
-module.exports.geojson = function(geom) {
+  splitSeek(seed, geom, locked, limits);
+  locked = mergeTiles(locked, limits);
 
-  if(geom.type === 'Point') {
-
-  } else if(geom.type === 'LineString') {
-
-  } else if(geom.type === 'Polygon') {
-    var seed = [0,0,0];
-
-    var locked = [];
-    splitSeek(seed, geom, locked, limits);
-    locked = mergeTiles(locked);
-
-    var tileFeatures = locked.map(function(t){
-        return tileToGeojson(t)
-    });
-    return {
-      type: 'FeatureCollection',
-      features: tileFeatures
-    }
+  var tileFeatures = locked.map(function(t){
+      return tileToGeojson(t)
+  });
+  return {
+    type: 'FeatureCollection',
+    features: tileFeatures
   }
 }
 
-module.exports.tiles = function(geom) {
-  if(geom.type === 'Point') {
+module.exports.tiles = function(geom, limits) {
+  var seed = [0,0,0];
+  var locked = [];
 
-  } else if(geom.type === 'LineString') {
+  splitSeek(seed, geom, locked, limits);
+  locked = mergeTiles(locked, limits);
 
-  } else if(geom.type === 'Polygon') {
-    var seed = [0,0,0];
-
-    var locked = [];
-    splitSeek(seed, geom, locked, limits);
-    locked = mergeTiles(locked);
-
-    return locked;
-  }
+  return locked;
 }
 
-function mergeTiles(tiles){
+function mergeTiles(tiles, limits){
   var merged = [];
   var changed = false;
   tiles.forEach(function(t){
@@ -79,7 +52,7 @@ function mergeTiles(tiles){
     return merged;
   }
   else{
-    return mergeTiles(merged);
+    return mergeTiles(merged, limits);
   }
 }
 
