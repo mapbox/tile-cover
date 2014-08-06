@@ -77,7 +77,7 @@ function splitSeek(tile, geom, locked, limits){
   if(tile[2] === 0 || (tileCovers && tile[2] < limits.max_zoom)){
     var children = getChildren(tile);
     children.forEach(function(t){
-      splitSeek(t, geom, locked, limits);
+      splitSeek(t, intersects.features[0], locked, limits);
     });
   } else if(tileCovers){
     locked.push(tile);
