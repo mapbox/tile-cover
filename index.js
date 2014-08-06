@@ -1,3 +1,12 @@
+/*
+tile: x,y,z
+
+quad:
+00 | 10
+-------
+01 | 11
+*/ 
+
 var isInside = require('turf-inside'),
     bboxPolygon = require('turf-bbox-polygon'),
     intersect = require('turf-intersect')
@@ -8,6 +17,7 @@ var limits = {
 };
 
 module.exports.geojson = function(geom) {
+
   if(geom.type === 'Point') {
 
   } else if(geom.type === 'LineString') {
@@ -17,11 +27,10 @@ module.exports.geojson = function(geom) {
 
     var locked = [];
     splitSeek(seed, geom, locked, limits);
-    
     locked = mergeTiles(locked);
 
     var tileFeatures = locked.map(function(t){
-        return tileToGeojson(t[0], t[1], t[2])
+        return tileToGeojson(t)
     });
     return {
       type: 'FeatureCollection',
@@ -41,7 +50,7 @@ module.exports.tiles = function(geom) {
     var locked = [];
     splitSeek(seed, geom, locked, limits);
     
-    locked = mergeTiles(locked);
+   // locked = mergeTiles(locked);
 
     return locked;
   }
@@ -51,15 +60,19 @@ function mergeTiles(tiles){
   var merged = [];
 
   tiles.forEach(function(t){
-    //console.log(t[0], t[1])
-    //console.log((t[0]%2===0 && t[1]%2===0) )
+    // top left and has all siblings
     if((t[0]%2===0 && t[1]%2===0) && hasSiblings(t, tiles)) {
       console.log('MERGE')
       merged.push(getParent(t));
+    // does not have all siblings
     } else if(!hasSiblings(t, tiles)){
       console.log('NO MERGE')
+      //merged.push(t);
+    // is not top left but has all siblings
+    } else {
+      console.log('DROP')
       merged.push(t);
-    } else {console.log()}
+    }
   })
   return merged;
 }
@@ -67,7 +80,7 @@ function mergeTiles(tiles){
 
 function splitSeek(tile, geom, locked, limits){
   var tileCovers = true;
-  var intersects = intersect(fc(tileToGeojson(tile[0],tile[1],tile[2])), fc(feature(geom)));
+  var intersects = intersect(fc(tileToGeojson(tile)), fc(feature(geom)));
   if(intersects.features[0].type === 'GeometryCollection'){
     tileCovers = false;
   }
@@ -83,8 +96,8 @@ function splitSeek(tile, geom, locked, limits){
 }
 
 
-function tileToGeojson(x, y, z){
-  var bbox = [tile2long(x,z), tile2lat(y,z), tile2long(x+1,z), tile2lat(y+1,z)];
+function tileToGeojson(tile){
+  var bbox = [tile2long(tile[0],tile[2]), tile2lat(tile[1],tile[2]), tile2long(tile[0]+1,tile[2]), tile2lat(tile[1]+1,tile[2])];
   return bboxPolygon(bbox);
 }
 
@@ -121,44 +134,74 @@ function getChildren(tile){
 }
 
 function getParent(tile){
-  // bottom left
+  // top left
   if(tile[0]%2===0 && tile[1]%2===0){
     return [tile[0]/2, tile[1]/2, tile[2]-1]
   } 
-  // top left
+  // bottom left
   else if(tile[0]%2===0){
     return [tile[0]/2, (tile[1]-1)/2, tile[2]-1]
   }
-  // bottom right
+  // top right
   else if(tile[1]%2===0){
     return [(tile[0]-1)/2, (tile[1])/2, tile[2]-1]
   }
-  // top right
+  // bottom right
   else {
     return [(tile[0]-1)/2, (tile[1]-1)/2, tile[2]-1]
   }
 }
 
+/*
+00 | 10
+-------
+01 | 11
+*/ 
 function hasSiblings(tile, tiles){
+  // top left
   if(
-      hasTile(tiles, [tile[0]+1, tile[1], tile[2]]) &&
-      hasTile(tiles, [tile[0]+1, tile[1]+1, tile[2]]) &&
-      hasTile(tiles, [tile[0], tile[1]+1, tile[2]])
+      (tile[0]%2===0 && tile[1]%2===0) && 
+      hasTile(tiles, [tile[0]+1, tile[1], tile[2]]) && // has top right
+      hasTile(tiles, [tile[0]+1, tile[1]+1, tile[2]]) && // has bottom right
+      hasTile(tiles, [tile[0], tile[1]+1, tile[2]]) // has bottom left
     ) {
     return true;
-  } else {
-    //console.log('DOES NOT HAVE ALL SIBS')
+  // bottom left
+  } else if(
+      (tile[0]%2===0) &&
+      hasTile(tiles, [tile[0], tile[1]-1, tile[2]]) && // has top left
+      hasTile(tiles, [tile[0]+1, tile[1], tile[2]]) && // has bottom right
+      hasTile(tiles, [tile[0]+1, tile[1]-1, tile[2]]) // has top right
+    ) {
+  // top right
+  } else if(
+      (tile[1]%2===0) &&
+      hasTile(tiles, [tile[0]-1, tile[1], tile[2]]) && // has top left
+      hasTile(tiles, [tile[0]-1, tile[1]+1, tile[2]]) && // has bottom left
+      hasTile(tiles, [tile[0], tile[1]+1, tile[2]]) // has bottom right
+    ){
+  // bottom right
+  } else if(
+      (!tile[0]%2===0) && (!tile[1]%2===0) &&
+      hasTile(tiles, [tile[0]-1, tile[1]-1, tile[2]]) && // has top left
+      hasTile(tiles, [tile[0]-1, tile[1], tile[2]]) && // has bottom left
+      hasTile(tiles, [tile[0], tile[1], tile[2]]) // has top right
+    ) {
+
+  }
+  else {
     return false;
   }
 }
 
 function hasTile(tiles, tile){
-  //var tileFound = false;
+  var tileFound = false;
   tiles.forEach(function(t){
     if(tilesEqual(t, tile)){
-      return true;
+      tileFound = true;
     }
   })
+  return tileFound;
 }
 
 function tilesEqual(tile1, tile2) {
