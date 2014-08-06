@@ -23,6 +23,8 @@ cover.tiles(poly, limits);
 cover.indexes(poly, limits);
 ```
 
+###examples
+
 Polygons:
 
 ![img](https://dl.dropbox.com/s/48cj16fvt8nyh3o/Screenshot%202014-08-06%2013.34.12.png)
