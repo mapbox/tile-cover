@@ -67,11 +67,11 @@ function mergeTiles(tiles){
     // does not have all siblings
     } else if(!hasSiblings(t, tiles)){
       console.log('NO MERGE')
-      //merged.push(t);
+      merged.push(t);
     // is not top left but has all siblings
     } else {
       console.log('DROP')
-      merged.push(t);
+      //merged.push(t);
     }
   })
   return merged;
@@ -94,7 +94,6 @@ function splitSeek(tile, geom, locked, limits){
     locked.push(tile);
   }
 }
-
 
 function tileToGeojson(tile){
   var bbox = [tile2long(tile[0],tile[2]), tile2lat(tile[1],tile[2]), tile2long(tile[0]+1,tile[2]), tile2lat(tile[1]+1,tile[2])];
@@ -133,6 +132,11 @@ function getChildren(tile){
   ]
 }
 
+/*
+00 | 10
+-------
+01 | 11
+*/ 
 function getParent(tile){
   // top left
   if(tile[0]%2===0 && tile[1]%2===0){
@@ -160,7 +164,7 @@ function getParent(tile){
 function hasSiblings(tile, tiles){
   // top left
   if(
-      (tile[0]%2===0 && tile[1]%2===0) && 
+      ((tile[0]%2===0 && tile[1]%2===0)) && 
       hasTile(tiles, [tile[0]+1, tile[1], tile[2]]) && // has top right
       hasTile(tiles, [tile[0]+1, tile[1]+1, tile[2]]) && // has bottom right
       hasTile(tiles, [tile[0], tile[1]+1, tile[2]]) // has bottom left
@@ -173,6 +177,7 @@ function hasSiblings(tile, tiles){
       hasTile(tiles, [tile[0]+1, tile[1], tile[2]]) && // has bottom right
       hasTile(tiles, [tile[0]+1, tile[1]-1, tile[2]]) // has top right
     ) {
+    return true;
   // top right
   } else if(
       (tile[1]%2===0) &&
@@ -180,14 +185,15 @@ function hasSiblings(tile, tiles){
       hasTile(tiles, [tile[0]-1, tile[1]+1, tile[2]]) && // has bottom left
       hasTile(tiles, [tile[0], tile[1]+1, tile[2]]) // has bottom right
     ){
+    return true;
   // bottom right
   } else if(
-      (!tile[0]%2===0) && (!tile[1]%2===0) &&
+      ((!tile[0]%2===0) && (!tile[1]%2===0)) &&
       hasTile(tiles, [tile[0]-1, tile[1]-1, tile[2]]) && // has top left
       hasTile(tiles, [tile[0]-1, tile[1], tile[2]]) && // has bottom left
-      hasTile(tiles, [tile[0], tile[1], tile[2]]) // has top right
+      hasTile(tiles, [tile[0], tile[1]-1, tile[2]]) // has top right
     ) {
-
+    return true;
   }
   else {
     return false;
