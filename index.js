@@ -12,8 +12,8 @@ var isInside = require('turf-inside'),
     intersect = require('turf-intersect')
 
 var limits = {
-  min_zoom: 1,
-  max_zoom: 10
+  min_zoom: 7,
+  max_zoom: 9
 };
 
 module.exports.geojson = function(geom) {
@@ -27,9 +27,6 @@ module.exports.geojson = function(geom) {
 
     var locked = [];
     splitSeek(seed, geom, locked, limits);
-    locked = mergeTiles(locked);
-    locked = mergeTiles(locked);
-    locked = mergeTiles(locked);
     locked = mergeTiles(locked);
 
     var tileFeatures = locked.map(function(t){
@@ -52,8 +49,7 @@ module.exports.tiles = function(geom) {
 
     var locked = [];
     splitSeek(seed, geom, locked, limits);
-    
-   // locked = mergeTiles(locked);
+    locked = mergeTiles(locked);
 
     return locked;
   }
@@ -61,29 +57,30 @@ module.exports.tiles = function(geom) {
 
 function mergeTiles(tiles){
   var merged = [];
-
+  var changed = false;
   tiles.forEach(function(t){
-    // top left and has all siblings
+    // top left and has all siblings -- merge
     if((t[0]%2===0 && t[1]%2===0) && hasSiblings(t, tiles)) {
-      //console.log('MERGE')
-      merged.push(getParent(t));
-      if(t[0]===124 && t[1]===90){
-        console.log('big overlap')
-        console.log('TILE: '+t)
-        console.log('HAS SIBLINGS: '+hasSiblings(t, tiles))
-        console.log('SIBLINGS: '+getSiblings(t))
+      if(t[2] > limits.min_zoom){
+        merged.push(getParent(t));
+        changed = true;
       }
-
-    // does not have all siblings
-    } else if(!hasSiblings(t, tiles)){
-      //console.log('NO MERGE')
-      merged.push(t);
-    // is not top left but has all siblings
-    } else {
-      //console.log('DROP')
+      else{
+        merged = merged.concat(getSiblings(t));
+      }
     }
-  })
-  return merged;
+    // does not have all siblings -- add
+    else if(!hasSiblings(t, tiles)){
+      merged.push(t);
+    }
+  });
+  // stop if the last round had no merges
+  if(!changed) {
+    return merged;
+  }
+  else{
+    return mergeTiles(merged);
+  }
 }
 
 function splitSeek(tile, geom, locked, limits){
@@ -106,7 +103,8 @@ function splitSeek(tile, geom, locked, limits){
 function tileToGeojson(tile){
   var bbox = [tile2long(tile[0],tile[2]), tile2lat(tile[1],tile[2]), tile2long(tile[0]+1,tile[2]), tile2lat(tile[1]+1,tile[2])];
   var poly = bboxPolygon(bbox);
-  poly.properties.id =  tile[0]+'/'+tile[1]+'/'+tile[2];
+  poly.properties.tile =  tile[0]+'/'+tile[1]+'/'+tile[2];
+  poly.properties.id = getIndex(tile);
   return poly;
 }
 
@@ -174,43 +172,6 @@ function hasSiblings(tile, tiles){
     }
   })
   return hasAll;
-
-  /*// top left
-  if(
-      ((tile[0]%2===0 && tile[1]%2===0)) && 
-      hasTile(tiles, [tile[0]+1, tile[1], tile[2]]) && // has top right
-      hasTile(tiles, [tile[0]+1, tile[1]+1, tile[2]]) && // has bottom right
-      hasTile(tiles, [tile[0], tile[1]+1, tile[2]]) // has bottom left
-    ) {
-    return true;
-  // bottom left
-  } else if(
-      (tile[0]%2===0) &&
-      hasTile(tiles, [tile[0], tile[1]-1, tile[2]]) && // has top left
-      hasTile(tiles, [tile[0]+1, tile[1], tile[2]]) && // has bottom right
-      hasTile(tiles, [tile[0]+1, tile[1]-1, tile[2]]) // has top right
-    ) {
-    return true;
-  // top right
-  } else if(
-      (tile[1]%2===0) &&
-      hasTile(tiles, [tile[0]-1, tile[1], tile[2]]) && // has top left
-      hasTile(tiles, [tile[0]-1, tile[1]+1, tile[2]]) && // has bottom left
-      hasTile(tiles, [tile[0], tile[1]+1, tile[2]]) // has bottom right
-    ){
-    return true;
-  // bottom right
-  } else if(
-      ((!tile[0]%2===0) && (!tile[1]%2===0)) &&
-      hasTile(tiles, [tile[0]-1, tile[1]-1, tile[2]]) && // has top left
-      hasTile(tiles, [tile[0]-1, tile[1], tile[2]]) && // has bottom left
-      hasTile(tiles, [tile[0], tile[1]-1, tile[2]]) // has top right
-    ) {
-    return true;
-  }
-  else {
-    return false;
-  }*/
 }
 
 function hasTile(tiles, tile){
@@ -229,4 +190,16 @@ function tilesEqual(tile1, tile2) {
       tile1[1] === tile2[1] &&
       tile1[2] === tile2[2]
     );
+}
+
+function getIndex(tile){
+  var index = '';
+  for (var zoom = tile[2]; zoom > 0; zoom--) {
+      var b = 0;
+      var mask = 1 << (zoom - 1);
+      if ((tile[0] & mask) !== 0) b++;
+      if ((tile[1] & mask) !== 0) b += 2;
+      index += b.toString();
+  }
+  return index;
 }
