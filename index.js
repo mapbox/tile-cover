@@ -1,6 +1,6 @@
 var isInside = require('turf-inside'),
-    bboxPolygon = require('turf-bbox-polygon'),
-    intersect = require('turf-intersect')
+  bboxPolygon = require('turf-bbox-polygon'),
+  intersect = require('turf-intersect');
 
 module.exports.geojson = function(geom, limits) {
   var seed = [0,0,0];
@@ -9,13 +9,13 @@ module.exports.geojson = function(geom, limits) {
   splitSeek(seed, geom, locked, limits);
   locked = mergeTiles(locked, limits);
 
-  var tileFeatures = locked.map(function(t){
-      return tileToGeojson(t)
+  var tileFeatures = locked.map(function(t) {
+      return tileToGeojson(t);
   });
   return {
     type: 'FeatureCollection',
     features: tileFeatures
-  }
+  };
 }
 
 module.exports.tiles = function(geom, limits) {
@@ -79,7 +79,7 @@ function splitSeek(tile, geom, locked, limits){
     var children = getChildren(tile);
     children.forEach(function(t){
       splitSeek(t, geom, locked, limits);
-    })
+    });
   } else if(tileCovers){
     locked.push(tile);
   }
@@ -106,14 +106,14 @@ function feature(geom){
     type: 'Feature',
     geometry: geom,
     properties: {}
-  }
+  };
 }
 
 function fc(feat){
   return {
     type: 'FeatureCollection',
     features: [feat]
-  }
+  };
 }
 
 function getChildren(tile){
@@ -122,30 +122,30 @@ function getChildren(tile){
     [tile[0]*2+1, tile[1]*2, tile[2]+1],
     [tile[0]*2+1, tile[1]*2+1, tile[2]+1],
     [tile[0]*2, tile[1]*2+1, tile[2]+1],
-  ]
+  ];
 }
 
 function getParent(tile){
   // top left
   if(tile[0]%2===0 && tile[1]%2===0){
-    return [tile[0]/2, tile[1]/2, tile[2]-1]
+    return [tile[0]/2, tile[1]/2, tile[2]-1];
   } 
   // bottom left
   else if((tile[0]%2===0) && (!tile[1]%2===0)){
-    return [tile[0]/2, (tile[1]-1)/2, tile[2]-1]
+    return [tile[0]/2, (tile[1]-1)/2, tile[2]-1];
   }
   // top right
   else if((!tile[0]%2===0) && (tile[1]%2===0)){
-    return [(tile[0]-1)/2, (tile[1])/2, tile[2]-1]
+    return [(tile[0]-1)/2, (tile[1])/2, tile[2]-1];
   }
   // bottom right
   else {
-    return [(tile[0]-1)/2, (tile[1]-1)/2, tile[2]-1]
+    return [(tile[0]-1)/2, (tile[1]-1)/2, tile[2]-1];
   }
 }
 
 function getSiblings(tile){
-  return getChildren(getParent(tile))
+  return getChildren(getParent(tile));
 }
 
 function hasSiblings(tile, tiles){
@@ -155,7 +155,7 @@ function hasSiblings(tile, tiles){
     if(!hasTile(tiles, sibling)){
       hasAll = false;
     }
-  })
+  });
   return hasAll;
 }
 
@@ -165,7 +165,7 @@ function hasTile(tiles, tile){
     if(tilesEqual(t, tile)){
       tileFound = true;
     }
-  })
+  });
   return tileFound;
 }
 
