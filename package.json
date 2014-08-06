@@ -1,6 +1,6 @@
 {
   "name": "tile-cover",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "generate the minimum number of tiles to cover a geojson geometry",
   "main": "index.js",
   "directories": {
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/morganherlocker/tile-cover.git"
+    "url": "https://github.com/mapbox/tile-cover.git"
   },
   "keywords": [
     "tile",
@@ -22,14 +22,15 @@
   "author": "morganherlocker",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/morganherlocker/tile-cover/issues"
+    "url": "https://github.com/mapbox/tile-cover/issues"
   },
-  "homepage": "https://github.com/morganherlocker/tile-cover",
+  "homepage": "https://github.com/mapbox/tile-cover",
   "devDependencies": {
     "tape": "^2.14.0"
   },
   "dependencies": {
     "turf-bbox-polygon": "^0.1.5",
+    "turf-inside": "^0.1.4",
     "turf-intersect": "0.0.0"
   }
 }
