@@ -17,14 +17,10 @@ cover.geojson(poly.geometry);
 cover.geojson(poly.tiles);
 ```
 
-Input:
+Polygons:
 
-![img](https://dl.dropbox.com/s/xf3ifvut64ay6jf/Screenshot%202014-08-05%2016.21.03.png)
+![img](https://dl.dropbox.com/s/48cj16fvt8nyh3o/Screenshot%202014-08-06%2013.34.12.png)
 
-Output:
+Lines:
 
-![img](https://dl.dropbox.com/s/8fjof4uep86hwlc/Screenshot%202014-08-05%2016.21.24.png)
-
-Input/Output:
-
-![img](https://dl.dropbox.com/s/py6yywfxnenx4ks/Screenshot%202014-08-05%2016.29.17.png)
+![img](https://dl.dropbox.com/s/u32bq56adqwhpyy/Screenshot%202014-08-06%2013.30.31.png)
