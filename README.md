@@ -20,6 +20,7 @@ var limits = {
 
 cover.geojson(poly, limits);
 cover.tiles(poly, limits);
+cover.indexes(poly, limits);
 ```
 
 Polygons:

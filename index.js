@@ -28,6 +28,18 @@ module.exports.tiles = function(geom, limits) {
   return locked;
 }
 
+module.exports.indexes = function(geom, limits) {
+  var seed = [0,0,0];
+  var locked = [];
+
+  splitSeek(seed, geom, locked, limits);
+  locked = mergeTiles(locked, limits);
+
+  return locked.map(function(tile){
+    return getIndex(tile);
+  });
+}
+
 function mergeTiles(tiles, limits){
   var merged = [];
   var changed = false;

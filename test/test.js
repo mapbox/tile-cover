@@ -11,6 +11,7 @@ test('uk', function(t){
 
   t.ok(cover.geojson(uk.geometry, limits), 'uk geojson');
   t.ok(cover.tiles(uk.geometry, limits).length, 'uk tiles');
+  t.ok(cover.indexes(uk.geometry, limits).length, 'uk indexes');
   fs.writeFileSync(__dirname+'/fixtures/uk_out.geojson', JSON.stringify(cover.geojson(uk.geometry, limits)));
   t.end()
 });
@@ -18,13 +19,14 @@ test('uk', function(t){
 test('line', function(t){
   var line = JSON.parse(fs.readFileSync(__dirname+'/fixtures/line.geojson'));
   var limits = {
-  	min_zoom: 7,
+  	min_zoom: 1,
   	max_zoom: 12
   }
 
 
   t.ok(cover.geojson(line.geometry, limits), 'line geojson');
   t.ok(cover.tiles(line.geometry, limits).length, 'line tiles');
+  t.ok(cover.indexes(line.geometry, limits).length, 'uk indexes');
   fs.writeFileSync(__dirname+'/fixtures/line_out.geojson', JSON.stringify(cover.geojson(line.geometry, limits)));
   t.end()
 });
