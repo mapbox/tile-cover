@@ -1,4 +1,6 @@
 var bboxPolygon = require('turf-bbox-polygon'),
+  extent = require('geojson-extent'),
+  bboxIntersects = require('bbox-intersect'),
   intersect = require('turf-intersect');
 
 module.exports.geojson = function(geom, limits) {
@@ -69,8 +71,11 @@ function mergeTiles(tiles, limits){
 
 function splitSeek(tile, geom, locked, limits){
   var tileCovers = true;
-  var intersects = intersect(fc(tileToGeojson(tile)), fc(feature(geom)));
-  if(intersects.features[0].type === 'GeometryCollection'){
+
+  if(needsIntersect(tileToGeojson(tile), geom)){
+    var intersects = intersect(fc(tileToGeojson(tile)), fc(feature(geom)));
+  }
+  if(!intersects || intersects.features[0].type === 'GeometryCollection'){
     tileCovers = false;
   }
 
@@ -186,4 +191,10 @@ function getIndex(tile){
       index += b.toString();
   }
   return index;
+}
+
+function needsIntersect(tile, geom){
+  var bboxGeom = extent(geom);
+  var bboxTile = extent(tile);
+  return bboxIntersects(bboxGeom, bboxTile);
 }
