@@ -24,7 +24,9 @@ module.exports.tiles = function(geom, limits) {
   var locked = [];
 
   splitSeek(seed, geom, locked, limits);
-  locked = mergeTiles(locked, limits);
+  if(geom.type != 'Point') {
+    locked = mergeTiles(locked, limits);
+  }
 
   return locked;
 }
@@ -34,7 +36,9 @@ module.exports.indexes = function(geom, limits) {
   var locked = [];
 
   splitSeek(seed, geom, locked, limits);
-  locked = mergeTiles(locked, limits);
+  if(geom.type != 'Point') {
+    locked = mergeTiles(locked, limits);
+  }
 
   return locked.map(function(tile){
     return getIndex(tile);
@@ -71,8 +75,8 @@ function mergeTiles(tiles, limits){
 
 function splitSeek(tile, geom, locked, limits){
   var tileCovers = true;
-
-  if(needsIntersect(tileToGeojson(tile), geom)){
+  var doIntersect = needsIntersect(tileToGeojson(tile), geom);
+  if(doIntersect) {
     var intersects = intersect(fc(tileToGeojson(tile)), fc(feature(geom)));
   }
   if(!intersects || intersects.features[0].type === 'GeometryCollection'){
