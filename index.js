@@ -7,8 +7,13 @@ module.exports.geojson = function(geom, limits) {
   var seed = [0,0,0];
   var locked = [];
 
-  splitSeek(seed, geom, locked, limits);
-  locked = mergeTiles(locked, limits);
+  if(geom.type != 'Point') {
+    splitSeek(seed, geom, locked, limits);
+    locked = mergeTiles(locked, limits);
+  }
+  else {
+    splitSeekPoint(seed, geom, locked, limits);
+  }
 
   var tileFeatures = locked.map(function(t) {
       return tileToGeojson(t);
@@ -23,10 +28,14 @@ module.exports.tiles = function(geom, limits) {
   var seed = [0,0,0];
   var locked = [];
 
-  splitSeek(seed, geom, locked, limits);
   if(geom.type != 'Point') {
+    splitSeek(seed, geom, locked, limits);
     locked = mergeTiles(locked, limits);
   }
+  else {
+    splitSeekPoint(seed, geom, locked, limits);
+  }
+
 
   return locked;
 }
@@ -87,6 +96,18 @@ function splitSeek(tile, geom, locked, limits){
     var children = getChildren(tile);
     children.forEach(function(t){
       splitSeek(t, intersects.features[0], locked, limits);
+    });
+  } else if(tileCovers){
+    locked.push(tile);
+  }
+}
+
+function splitSeekPoint(tile, geom, locked, limits){
+  var tileCovers = needsIntersect(tileToGeojson(tile), geom);
+  if(tile[2] === 0 || (tileCovers && tile[2] < limits.max_zoom)){
+    var children = getChildren(tile);
+    children.forEach(function(t){
+      splitSeekPoint(t, geom, locked, limits);
     });
   } else if(tileCovers){
     locked.push(tile);
