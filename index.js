@@ -12,7 +12,7 @@ module.exports.geojson = function(geom, limits) {
     locked = mergeTiles(locked, limits);
   }
   else {
-    splitSeekPoint(seed, geom, locked, limits);
+    locked.push(pointToTile(geom, limits.max_zoom));
   }
 
   var tileFeatures = locked.map(function(t) {
@@ -33,9 +33,8 @@ module.exports.tiles = function(geom, limits) {
     locked = mergeTiles(locked, limits);
   }
   else {
-    splitSeekPoint(seed, geom, locked, limits);
+    locked.push(pointToTile(geom, limits.max_zoom));
   }
-
 
   return locked;
 }
@@ -44,9 +43,12 @@ module.exports.indexes = function(geom, limits) {
   var seed = [0,0,0];
   var locked = [];
 
-  splitSeek(seed, geom, locked, limits);
   if(geom.type != 'Point') {
+    splitSeek(seed, geom, locked, limits);
     locked = mergeTiles(locked, limits);
+  }
+  else {
+    locked.push(pointToTile(geom, limits.max_zoom));
   }
 
   return locked.map(function(tile){
@@ -128,6 +130,22 @@ function tile2long(x,z) {
  function tile2lat(y,z) {
   var n=Math.PI-2*Math.PI*y/Math.pow(2,z);
   return (180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n))));
+}
+
+function pointToTile(geom, z){
+  return [
+    long2tile(geom.coordinates[0], z),
+    lat2tile(geom.coordinates[1], z),
+    z
+  ];
+}
+
+function long2tile(lon, z) { 
+  return (Math.floor((lon+180)/360*Math.pow(2, z))); 
+}
+
+function lat2tile(lat, z) { 
+  return (Math.floor((1-Math.log(Math.tan(lat*Math.PI/180) + 1/Math.cos(lat*Math.PI/180))/Math.PI)/2 *Math.pow(2, z))); 
 }
 
 function feature(geom){
