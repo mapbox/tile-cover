@@ -3,7 +3,7 @@ var tilebelt = require('tilebelt'),
   bboxIntersects = require('bbox-intersect'),
   intersect = require('turf-intersect');
 
-module.exports.geojson = function(geom, limits) {
+module.exports.geojson = function (geom, limits) {
   var seed = [0,0,0];
   var locked = [];
 
@@ -24,7 +24,7 @@ module.exports.geojson = function(geom, limits) {
   };
 };
 
-module.exports.tiles = function(geom, limits) {
+module.exports.tiles = function (geom, limits) {
   var seed = [0,0,0];
   var locked = [];
 
@@ -39,7 +39,7 @@ module.exports.tiles = function(geom, limits) {
   return locked;
 };
 
-module.exports.indexes = function(geom, limits) {
+module.exports.indexes = function (geom, limits) {
   var seed = [0,0,0];
   var locked = [];
 
@@ -56,7 +56,7 @@ module.exports.indexes = function(geom, limits) {
   });
 };
 
-function mergeTiles(tiles, limits){
+function mergeTiles (tiles, limits){
   var merged = [];
   var changed = false;
   tiles.forEach(function(t){
@@ -84,12 +84,12 @@ function mergeTiles(tiles, limits){
   }
 }
 
-function splitSeek(tile, geom, locked, limits){
+function splitSeek (tile, geom, locked, limits){
   var tileCovers = true;
   var doIntersect = needsIntersect(tilebelt.tileToGeoJSON(tile), geom);
   var intersects;
   if(doIntersect) {
-    intersects = intersect(fc(tilebelt.tileToGeoJSON(tile)), fc(feature(geom)));
+    intersects = intersect(featureCollection(tilebelt.tileToGeoJSON(tile)), featureCollection(feature(geom)));
   }
   if(!intersects || intersects.features[0].type === 'GeometryCollection'){
     tileCovers = false;
@@ -105,7 +105,7 @@ function splitSeek(tile, geom, locked, limits){
   }
 }
 
-function feature(geom){
+function feature (geom) {
   return {
     type: 'Feature',
     geometry: geom,
@@ -113,14 +113,14 @@ function feature(geom){
   };
 }
 
-function fc(feat){
+function featureCollection (feat) {
   return {
     type: 'FeatureCollection',
     features: [feat]
   };
 }
 
-function needsIntersect(tile, geom){
+function needsIntersect (tile, geom) {
   var bboxGeom = extent(geom);
   var bboxTile = extent(tile);
   return bboxIntersects(bboxGeom, bboxTile);
