@@ -31,7 +31,7 @@
   "dependencies": {
     "bbox-intersect": "^0.1.0",
     "geojson-extent": "^0.3.0",
-    "turf-bbox-polygon": "^0.1.5",
+    "tilebelt": "^0.1.1",
     "turf-inside": "^0.1.4",
     "turf-intersect": "0.0.0"
   }
