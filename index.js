@@ -3,7 +3,7 @@ var tilebelt = require('tilebelt'),
   bboxIntersects = require('bbox-intersect'),
   intersect = require('turf-intersect');
 
-module.exports.geojson = function (geom, limits) {
+module.exports.geojson = function(geom, limits) {
   var seed = [0,0,0];
   var locked = [];
 
@@ -24,7 +24,7 @@ module.exports.geojson = function (geom, limits) {
   };
 };
 
-module.exports.tiles = function (geom, limits) {
+module.exports.tiles = function(geom, limits) {
   var seed = [0,0,0];
   var locked = [];
 
@@ -39,7 +39,7 @@ module.exports.tiles = function (geom, limits) {
   return locked;
 };
 
-module.exports.indexes = function (geom, limits) {
+module.exports.indexes = function(geom, limits) {
   var seed = [0,0,0];
   var locked = [];
 
@@ -56,7 +56,7 @@ module.exports.indexes = function (geom, limits) {
   });
 };
 
-function mergeTiles (tiles, limits){
+function mergeTiles(tiles, limits){
   var merged = [];
   var changed = false;
   tiles.forEach(function(t){
@@ -84,28 +84,58 @@ function mergeTiles (tiles, limits){
   }
 }
 
-function splitSeek (tile, geom, locked, limits){
-  var tileCovers = true;
-  var doIntersect = needsIntersect(tilebelt.tileToGeoJSON(tile), geom);
-  var intersects;
-  if(doIntersect) {
-    intersects = intersect(featureCollection(tilebelt.tileToGeoJSON(tile)), featureCollection(feature(geom)));
-  }
-  if(!intersects || intersects.features[0].type === 'GeometryCollection'){
-    tileCovers = false;
-  }
+function splitSeek(tile, geom, locked, limits){
+  if(!tileGeomEquals(tile, geom)){
+    var tileCovers = true;
+    var doIntersect = needsIntersect(tilebelt.tileToGeoJSON(tile), geom);
+    var intersects;
+    if(doIntersect) {
+      intersects = intersect(fc(tilebelt.tileToGeoJSON(tile)), fc(feature(geom)));
+    }
+    if(!intersects || intersects.features[0].type === 'GeometryCollection'){
+      tileCovers = false;
+    }
 
-  if(tile[2] === 0 || (tileCovers && tile[2] < limits.max_zoom)){
-    var children = tilebelt.getChildren(tile);
-    children.forEach(function(t){
-      splitSeek(t, intersects.features[0], locked, limits);
-    });
-  } else if(tileCovers){
+    if(tile[2] === 0 || (tileCovers && tile[2] < limits.max_zoom)){
+      var children = tilebelt.getChildren(tile);
+      children.forEach(function(t){
+        splitSeek(t, intersects.features[0], locked, limits);
+      });
+    } else if(tileCovers){
+      locked.push(tile);
+    }
+  } else {
     locked.push(tile);
   }
 }
 
-function feature (geom) {
+function tileGeomEquals (tile, geom){
+  var tileGeojson = tilebelt.tileToGeoJSON(tile).geometry;
+  if(tileGeojson.coordinates[0].length === 5 && geom.coordinates[0].length === 5){
+    var numShared = 0;
+    geom.coordinates[0].forEach(function(coord1){
+      tileGeojson.coordinates[0].forEach(function(coord2){
+        if(coord1[0] === coord2[0] && coord1[1] === coord2[1]){
+          //console.log(coord1[0] +'==='+ coord2[0])
+          //console.log(coord1[1] +'==='+ coord2[1])
+          numShared++;
+        }
+      });
+    });
+    if(numShared > 4){
+      console.log('SHARED')
+      console.log(JSON.stringify(tileGeojson))
+      console.log(JSON.stringify(geom))
+
+      return true;
+    }
+  }
+  else{
+    return false;
+  }
+}
+
+function feature(geom){
   return {
     type: 'Feature',
     geometry: geom,
@@ -113,14 +143,14 @@ function feature (geom) {
   };
 }
 
-function featureCollection (feat) {
+function fc(feat){
   return {
     type: 'FeatureCollection',
     features: [feat]
   };
 }
 
-function needsIntersect (tile, geom) {
+function needsIntersect(tile, geom){
   var bboxGeom = extent(geom);
   var bboxTile = extent(tile);
   return bboxIntersects(bboxGeom, bboxTile);
