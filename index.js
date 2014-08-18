@@ -50,7 +50,6 @@ module.exports.indexes = function(geom, limits) {
   else {
     locked.push(tilebelt.pointToTile(geom, limits.max_zoom));
   }
-
   return locked.map(function(tile){
     return tilebelt.tileToQuadkey(tile);
   });
@@ -84,7 +83,7 @@ function mergeTiles(tiles, limits){
   }
 }
 
-function splitSeek(tile, geom, locked, limits){
+function splitSeek(tile, geom,  locked, limits){
   if(!tileGeomEquals(tile, geom)){
     var tileCovers = true;
     var doIntersect = needsIntersect(tilebelt.tileToGeoJSON(tile), geom);
@@ -110,23 +109,18 @@ function splitSeek(tile, geom, locked, limits){
 }
 
 function tileGeomEquals (tile, geom){
+  tile = tilebelt.getParent(tile);
   var tileGeojson = tilebelt.tileToGeoJSON(tile).geometry;
   if(tileGeojson.coordinates[0].length === 5 && geom.coordinates[0].length === 5){
     var numShared = 0;
     geom.coordinates[0].forEach(function(coord1){
       tileGeojson.coordinates[0].forEach(function(coord2){
         if(coord1[0] === coord2[0] && coord1[1] === coord2[1]){
-          //console.log(coord1[0] +'==='+ coord2[0])
-          //console.log(coord1[1] +'==='+ coord2[1])
           numShared++;
         }
       });
     });
-    if(numShared > 4){
-      console.log('SHARED')
-      console.log(JSON.stringify(tileGeojson))
-      console.log(JSON.stringify(geom))
-
+    if(numShared === 7){
       return true;
     }
   }
