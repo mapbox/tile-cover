@@ -12,7 +12,7 @@ module.exports.geojson = function (geom, limits) {
     locked = mergeTiles(locked, limits);
   }
   else {
-    locked.push(tilebelt.pointToTile(geom, limits.max_zoom));
+    locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
   }
 
   var tileFeatures = locked.map(function(t) {
@@ -33,7 +33,7 @@ module.exports.tiles = function (geom, limits) {
     locked = mergeTiles(locked, limits);
   }
   else {
-    locked.push(tilebelt.pointToTile(geom, limits.max_zoom));
+    locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
   }
 
   return locked;
@@ -48,9 +48,8 @@ module.exports.indexes = function (geom, limits) {
     locked = mergeTiles(locked, limits);
   }
   else {
-    locked.push(tilebelt.pointToTile(geom, limits.max_zoom));
+    locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
   }
-
   return locked.map(function(tile){
     return tilebelt.tileToQuadkey(tile);
   });
