@@ -5,8 +5,8 @@ var cover = require('../'),
 test('uk', function(t){
   var uk = JSON.parse(fs.readFileSync(__dirname+'/fixtures/uk.geojson'));
   var limits = {
-    min_zoom: 7,
-    max_zoom: 9
+    min_zoom: 1,
+    max_zoom: 10
   };
 
   t.ok(cover.geojson(uk.geometry, limits), 'uk geojson');
