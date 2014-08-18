@@ -4,123 +4,123 @@ var tilebelt = require('tilebelt'),
   intersect = require('turf-intersect');
 
 module.exports.geojson = function (geom, limits) {
-  var seed = [0,0,0];
-  var locked = [];
+    var seed = [0,0,0];
+    var locked = [];
 
-  if(geom.type != 'Point') {
-    splitSeek(seed, geom, locked, limits);
-    locked = mergeTiles(locked, limits);
-  }
-  else {
-    locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
-  }
+    if(geom.type != 'Point') {
+        splitSeek(seed, geom, locked, limits);
+        locked = mergeTiles(locked, limits);
+    }
+    else {
+        locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
+    }
 
-  var tileFeatures = locked.map(function(t) {
-      return tilebelt.tileToGeoJSON(t);
-  });
-  return {
-    type: 'FeatureCollection',
-    features: tileFeatures
-  };
+    var tileFeatures = locked.map(function(t) {
+        return tilebelt.tileToGeoJSON(t);
+    });
+    return {
+        type: 'FeatureCollection',
+        features: tileFeatures
+    };
 };
 
 module.exports.tiles = function (geom, limits) {
-  var seed = [0,0,0];
-  var locked = [];
+var seed = [0,0,0];
+var locked = [];
 
-  if(geom.type != 'Point') {
+if(geom.type != 'Point') {
     splitSeek(seed, geom, locked, limits);
     locked = mergeTiles(locked, limits);
-  }
-  else {
+}
+else {
     locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
-  }
+}
 
-  return locked;
+return locked;
 };
 
 module.exports.indexes = function (geom, limits) {
-  var seed = [0,0,0];
-  var locked = [];
+    var seed = [0,0,0];
+    var locked = [];
 
-  if(geom.type != 'Point') {
-    splitSeek(seed, geom, locked, limits);
-    locked = mergeTiles(locked, limits);
-  }
-  else {
-    locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
-  }
-  return locked.map(function(tile){
-    return tilebelt.tileToQuadkey(tile);
-  });
+    if(geom.type != 'Point') {
+        splitSeek(seed, geom, locked, limits);
+        locked = mergeTiles(locked, limits);
+    }
+    else {
+        locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
+    }
+        return locked.map(function(tile){
+        return tilebelt.tileToQuadkey(tile);
+    });
 };
 
 function mergeTiles (tiles, limits){
-  var merged = [];
-  var changed = false;
-  tiles.forEach(function(t){
-    // top left and has all siblings -- merge
-    if((t[0]%2===0 && t[1]%2===0) && tilebelt.hasSiblings(t, tiles)) {
-      if(t[2] > limits.min_zoom){
-        merged.push(tilebelt.getParent(t));
-        changed = true;
-      }
-      else{
-        merged = merged.concat(tilebelt.getSiblings(t));
-      }
+    var merged = [];
+    var changed = false;
+    tiles.forEach(function(t){
+        // top left and has all siblings -- merge
+        if((t[0]%2===0 && t[1]%2===0) && tilebelt.hasSiblings(t, tiles)) {
+            if(t[2] > limits.min_zoom){
+                merged.push(tilebelt.getParent(t));
+                changed = true;
+            }
+            else{
+                merged = merged.concat(tilebelt.getSiblings(t));
+            }
+        }
+        // does not have all siblings -- add
+        else if(!tilebelt.hasSiblings(t, tiles)){
+            merged.push(t);
+        }
+    });
+    // stop if the last round had no merges
+    if(!changed) {
+        return merged;
     }
-    // does not have all siblings -- add
-    else if(!tilebelt.hasSiblings(t, tiles)){
-      merged.push(t);
+    else{
+        return mergeTiles(merged, limits);
     }
-  });
-  // stop if the last round had no merges
-  if(!changed) {
-    return merged;
-  }
-  else{
-    return mergeTiles(merged, limits);
-  }
 }
 
 function splitSeek (tile, geom, locked, limits){
-  var tileCovers = true;
-  var doIntersect = needsIntersect(tilebelt.tileToGeoJSON(tile), geom);
-  var intersects;
-  if(doIntersect) {
-    intersects = intersect(featureCollection(tilebelt.tileToGeoJSON(tile)), featureCollection(feature(geom)));
-  }
-  if(!intersects || intersects.features[0].type === 'GeometryCollection'){
-    tileCovers = false;
-  }
+    var tileCovers = true;
+    var doIntersect = needsIntersect(tilebelt.tileToGeoJSON(tile), geom);
+    var intersects;
+    if(doIntersect) {
+        intersects = intersect(featureCollection(tilebelt.tileToGeoJSON(tile)), featureCollection(feature(geom)));
+    }
+    if(!intersects || intersects.features[0].type === 'GeometryCollection'){
+        tileCovers = false;
+    }
 
-  if(tile[2] === 0 || (tileCovers && tile[2] < limits.max_zoom)){
-    var children = tilebelt.getChildren(tile);
-    children.forEach(function(t){
-      splitSeek(t, intersects.features[0], locked, limits);
-    });
-  } else if(tileCovers){
-    locked.push(tile);
-  }
+    if(tile[2] === 0 || (tileCovers && tile[2] < limits.max_zoom)){
+        var children = tilebelt.getChildren(tile);
+        children.forEach(function(t){
+            splitSeek(t, intersects.features[0], locked, limits);
+        });
+    } else if(tileCovers){
+        locked.push(tile);
+    }
 }
 
 function feature (geom) {
-  return {
-    type: 'Feature',
-    geometry: geom,
-    properties: {}
-  };
+    return {
+        type: 'Feature',
+        geometry: geom,
+        properties: {}
+    };
 }
 
 function featureCollection (feat) {
-  return {
-    type: 'FeatureCollection',
-    features: [feat]
-  };
+    return {
+        type: 'FeatureCollection',
+        features: [feat]
+    };
 }
 
 function needsIntersect (tile, geom) {
-  var bboxGeom = extent(geom);
-  var bboxTile = extent(tile);
-  return bboxIntersects(bboxGeom, bboxTile);
+    var bboxGeom = extent(geom);
+    var bboxTile = extent(tile);
+    return bboxIntersects(bboxGeom, bboxTile);
 }
