@@ -50,6 +50,7 @@ test('point', function(t){
     t.ok(cover.geojson(point.geometry, limits), 'point geojson');
     t.ok(cover.tiles(point.geometry, limits).length, 'point tiles');
     t.ok(cover.indexes(point.geometry, limits).length, 'point indexes');
+    console.log(cover.indexes(point.geometry, limits))
     t.notEqual(cover.indexes(point.geometry, limits)[0], '');
     fs.writeFileSync(__dirname+'/fixtures/point_out.geojson', JSON.stringify(cover.geojson(point.geometry, limits)));
     t.end();
