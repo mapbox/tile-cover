@@ -54,3 +54,27 @@ test('point', function(t){
     fs.writeFileSync(__dirname+'/fixtures/point_out.geojson', JSON.stringify(cover.geojson(point.geometry, limits)));
     t.end();
 });
+
+test('russia', function(t){
+    var russia = JSON.parse(fs.readFileSync(__dirname+'/fixtures/russia.geojson'));
+    var limits = {
+        min_zoom: 6,
+        max_zoom: 6
+    };
+
+    t.ok(cover.geojson(russia, limits), 'russia geojson');
+    t.ok(cover.tiles(russia, limits).length, 'russia tiles');
+    t.ok(cover.indexes(russia, limits).length, 'russia indexes');
+    t.equal(cover.indexes(russia, limits).length, 457)
+    fs.writeFileSync(__dirname+'/fixtures/russia_out.geojson', JSON.stringify(cover.geojson(russia, limits), 'russia tiles'));
+    //console.log(cover.tiles(russia, limits))
+    t.end();
+});
+
+function f(g, name){
+    return {
+        type:'Feature',
+        properties: {name: name},
+        geometry: g
+    }
+}

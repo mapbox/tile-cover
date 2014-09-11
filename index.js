@@ -82,47 +82,24 @@ function mergeTiles(tiles, limits) {
 }
 
 function splitSeek(tile, geom, locked, limits) {
-    if (!tileGeomEquals(tile, geom)) {
-        var tileCovers = true;
-        var doIntersect = needsIntersect(tilebelt.tileToGeoJSON(tile), geom);
-        var intersects;
-        if (doIntersect) {
-            intersects = intersect(fc(tilebelt.tileToGeoJSON(tile)), fc(feature(geom)));
-        }
-        if (!intersects || intersects.features[0].type === 'GeometryCollection') {
-            tileCovers = false;
-        }
-
-        if (tile[2] === 0 || (tileCovers && tile[2] < limits.max_zoom)) {
-            var children = tilebelt.getChildren(tile);
-            children.forEach(function(t) {
-                splitSeek(t, intersects.features[0], locked, limits);
-            });
-        } else if (tileCovers) {
-            locked.push(tile);
-        }
-    } else {
-        locked.push(tile);
+    var tileCovers = true;
+    var doIntersect = needsIntersect(tilebelt.tileToGeoJSON(tile), geom);
+    var intersects;
+    if (doIntersect) {
+        intersects = intersect(fc(tilebelt.tileToGeoJSON(tile)), fc(feature(geom)));
     }
-}
+    if (!intersects || intersects.features[0].type === 'GeometryCollection') {
+        tileCovers = false;
+    }
 
-function tileGeomEquals(tile, geom) {
-    tile = tilebelt.getParent(tile);
-    var tileGeojson = tilebelt.tileToGeoJSON(tile).geometry;
-    if (tileGeojson.coordinates[0].length === 5 && geom.coordinates[0].length === 5) {
-        var numShared = 0;
-        geom.coordinates[0].forEach(function(coord1) {
-            tileGeojson.coordinates[0].forEach(function(coord2) {
-                if (coord1[0] === coord2[0] && coord1[1] === coord2[1]) {
-                    numShared++;
-                }
-            });
+    if (tile[2] === 0 || (tileCovers && tile[2] < limits.max_zoom)) {
+        var children = tilebelt.getChildren(tile);
+        children.forEach(function(t) {
+            splitSeek(t, intersects.features[0], locked, limits);
         });
-        if (numShared === 7) {
-            return true;
-        }
-    } else {
-        return false;
+    } else if (tileCovers) {
+        //console.log(tile[2])
+        locked.push(tile);
     }
 }
 
