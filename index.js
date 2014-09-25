@@ -6,14 +6,16 @@ var tilebelt = require('tilebelt'),
 module.exports.geojson = function(geom, limits) {
     var locked = [];
 
-    if (geom.type != 'Point') {
+    if (geom.type === 'Point') {
+        locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
+    } if(geom.type === 'MultiPoint') {
+
+    } else {
         var seed = tilebelt.bboxToTile(extent(geom));
         if (!seed[3]) seed = [0, 0, 0];
         splitSeek(seed, geom, locked, limits);
         locked = mergeTiles(locked, limits);
-    } else {
-        locked.push(tilebelt.pointToTile(geom, limits.max_zoom));
-    }
+    } 
 
     var tileFeatures = locked.map(function(t) {
         return tilebelt.tileToGeoJSON(t);
@@ -33,7 +35,7 @@ module.exports.tiles = function(geom, limits) {
         splitSeek(seed, geom, locked, limits);
         locked = mergeTiles(locked, limits);
     } else {
-        locked.push(tilebelt.pointToTile(geom, limits.max_zoom));
+        locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
     }
 
     return locked;

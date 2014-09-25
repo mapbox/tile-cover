@@ -51,6 +51,9 @@ test('point', function(t){
     t.ok(cover.tiles(point.geometry, limits).length, 'point tiles');
     t.ok(cover.indexes(point.geometry, limits).length, 'point indexes');
     t.notEqual(cover.indexes(point.geometry, limits)[0], '');
+    t.equal(typeof cover.tiles(point.geometry, limits)[0][0], 'number')
+    t.equal(typeof cover.tiles(point.geometry, limits)[0][1], 'number')
+    t.equal(typeof cover.tiles(point.geometry, limits)[0][2], 'number')
     fs.writeFileSync(__dirname+'/fixtures/point_out.geojson', JSON.stringify(cover.geojson(point.geometry, limits)));
     t.end();
 });
@@ -67,7 +70,6 @@ test('russia', function(t){
     t.ok(cover.indexes(russia, limits).length, 'russia indexes');
     t.equal(cover.indexes(russia, limits).length, 457)
     fs.writeFileSync(__dirname+'/fixtures/russia_out.geojson', JSON.stringify(cover.geojson(russia, limits), 'russia tiles'));
-    //console.log(cover.tiles(russia, limits))
     t.end();
 });
 
