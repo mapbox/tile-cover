@@ -6,13 +6,24 @@ var tilebelt = require('tilebelt'),
 module.exports.geojson = function(geom, limits) {
     var locked = [];
 
-    if (geom.type != 'Point') {
+    if (geom.type === 'Point') {
+        locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
+    } if(geom.type === 'MultiPoint') {
+        for(var i = 0; i < geom.coordinates.length; i++) {
+            locked.push(tilebelt.pointToTile(geom.coordinates[i][0], geom.coordinates[i][1], limits.max_zoom));
+        }
+        var deduped = []
+        for(var i = 0; i < locked.length; i++) {
+            if(!tilebelt.hasTile(deduped, locked[i])){
+                deduped.push(locked[i])
+            }
+        }
+        locked = deduped;
+    } else {
         var seed = tilebelt.bboxToTile(extent(geom));
         if (!seed[3]) seed = [0, 0, 0];
         splitSeek(seed, geom, locked, limits);
         locked = mergeTiles(locked, limits);
-    } else {
-        locked.push(tilebelt.pointToTile(geom, limits.max_zoom));
     }
 
     var tileFeatures = locked.map(function(t) {
@@ -27,13 +38,24 @@ module.exports.geojson = function(geom, limits) {
 module.exports.tiles = function(geom, limits) {
     var locked = [];
 
-    if (geom.type != 'Point') {
+    if (geom.type === 'Point') {
+        locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
+    } if(geom.type === 'MultiPoint') {
+        for(var i = 0; i < geom.coordinates.length; i++) {
+            locked.push(tilebelt.pointToTile(geom.coordinates[i][0], geom.coordinates[i][1], limits.max_zoom));
+        }
+        var deduped = []
+        for(var i = 0; i < locked.length; i++) {
+            if(!tilebelt.hasTile(deduped, locked[i])){
+                deduped.push(locked[i])
+            }
+        }
+        locked = deduped;
+    } else {
         var seed = tilebelt.bboxToTile(extent(geom));
         if (!seed[3]) seed = [0, 0, 0];
         splitSeek(seed, geom, locked, limits);
         locked = mergeTiles(locked, limits);
-    } else {
-        locked.push(tilebelt.pointToTile(geom, limits.max_zoom));
     }
 
     return locked;
@@ -42,14 +64,26 @@ module.exports.tiles = function(geom, limits) {
 module.exports.indexes = function(geom, limits) {
     var locked = [];
 
-    if (geom.type != 'Point') {
+    if (geom.type === 'Point') {
+        locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
+    } if(geom.type === 'MultiPoint') {
+        for(var i = 0; i < geom.coordinates.length; i++) {
+            locked.push(tilebelt.pointToTile(geom.coordinates[i][0], geom.coordinates[i][1], limits.max_zoom));
+        }
+        var deduped = []
+        for(var i = 0; i < locked.length; i++) {
+            if(!tilebelt.hasTile(deduped, locked[i])){
+                deduped.push(locked[i])
+            }
+        }
+        locked = deduped;
+    } else {
         var seed = tilebelt.bboxToTile(extent(geom));
         if (!seed[3]) seed = [0, 0, 0];
         splitSeek(seed, geom, locked, limits);
         locked = mergeTiles(locked, limits);
-    } else {
-        locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
     }
+
     return locked.map(function(tile) {
         return tilebelt.tileToQuadkey(tile);
     });

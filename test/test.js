@@ -51,6 +51,9 @@ test('point', function(t){
     t.ok(cover.tiles(point.geometry, limits).length, 'point tiles');
     t.ok(cover.indexes(point.geometry, limits).length, 'point indexes');
     t.notEqual(cover.indexes(point.geometry, limits)[0], '');
+    t.equal(typeof cover.tiles(point.geometry, limits)[0][0], 'number')
+    t.equal(typeof cover.tiles(point.geometry, limits)[0][1], 'number')
+    t.equal(typeof cover.tiles(point.geometry, limits)[0][2], 'number')
     fs.writeFileSync(__dirname+'/fixtures/point_out.geojson', JSON.stringify(cover.geojson(point.geometry, limits)));
     t.end();
 });
@@ -67,7 +70,6 @@ test('russia', function(t){
     t.ok(cover.indexes(russia, limits).length, 'russia indexes');
     t.equal(cover.indexes(russia, limits).length, 457)
     fs.writeFileSync(__dirname+'/fixtures/russia_out.geojson', JSON.stringify(cover.geojson(russia, limits), 'russia tiles'));
-    //console.log(cover.tiles(russia, limits))
     t.end();
 });
 
@@ -78,3 +80,46 @@ function f(g, name){
         geometry: g
     }
 }
+
+test('multipoint', function(t){
+    var multipoint = {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+            "type": "MultiPoint",
+            "coordinates": [
+                [
+                    -84.48486328124999,
+                    43.40504748787035,
+                ],
+                [
+                    -90.87890625,
+                    39.90973623453719
+                ],
+                [
+                    -84.55078125,
+                    43.45291889355468
+                ],
+                [
+                    -90.8349609375,
+                    39.93711893299021
+                ]
+            ]
+        }
+    };
+    var limits = {
+        min_zoom: 1,
+        max_zoom: 12
+    };
+
+    t.ok(cover.geojson(multipoint.geometry, limits), 'multipoint geojson');
+    t.ok(cover.tiles(multipoint.geometry, limits).length, 'multipoint tiles');
+    t.ok(cover.indexes(multipoint.geometry, limits).length, 'multipoint indexes');
+    t.notEqual(cover.indexes(multipoint.geometry, limits)[0], '');
+    t.equal(cover.tiles(multipoint.geometry, limits).length, 3)
+    t.equal(typeof cover.tiles(multipoint.geometry, limits)[0][0], 'number')
+    t.equal(typeof cover.tiles(multipoint.geometry, limits)[0][1], 'number')
+    t.equal(typeof cover.tiles(multipoint.geometry, limits)[0][2], 'number')
+    fs.writeFileSync(__dirname+'/fixtures/multipoint_out.geojson', JSON.stringify(cover.geojson(multipoint.geometry, limits)));
+    t.end();
+});
