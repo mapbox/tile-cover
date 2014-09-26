@@ -9,9 +9,12 @@ module.exports.geojson = function(geom, limits) {
     if (geom.type === 'Point') {
         locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
     } else if (geom.type === 'MultiPoint') {
+        var quadkeys = {};
         for(var i = 0; i < geom.coordinates.length; i++) {
-            var tile = tilebelt.pointToTile(geom.coordinates[i][0], geom.coordinates[i][1], limits.max_zoom)
-            if(!tilebelt.hasTile(locked, tile)) {
+            var tile = tilebelt.pointToTile(geom.coordinates[i][0], geom.coordinates[i][1], limits.max_zoom);
+            var quadkey = tilebelt.tileToQuadkey(tile);
+            if(!quadkeys[quadkey]) {
+                quadkeys[quadkey] = true;
                 locked.push(tile);
             }
         }
@@ -37,9 +40,12 @@ module.exports.tiles = function(geom, limits) {
     if (geom.type === 'Point') {
         locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
     } else if(geom.type === 'MultiPoint') {
+        var quadkeys = {};
         for(var i = 0; i < geom.coordinates.length; i++) {
-            var tile = tilebelt.pointToTile(geom.coordinates[i][0], geom.coordinates[i][1], limits.max_zoom)
-            if(!tilebelt.hasTile(locked, tile)) {
+            var tile = tilebelt.pointToTile(geom.coordinates[i][0], geom.coordinates[i][1], limits.max_zoom);
+            var quadkey = tilebelt.tileToQuadkey(tile);
+            if(!quadkeys[quadkey]) {
+                quadkeys[quadkey] = true;
                 locked.push(tile);
             }
         }
@@ -59,9 +65,12 @@ module.exports.indexes = function(geom, limits) {
     if (geom.type === 'Point') {
         locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
     } else if(geom.type === 'MultiPoint') {
+        var quadkeys = {};
         for(var i = 0; i < geom.coordinates.length; i++) {
-            var tile = tilebelt.pointToTile(geom.coordinates[i][0], geom.coordinates[i][1], limits.max_zoom)
-            if(!tilebelt.hasTile(locked, tile)) {
+            var tile = tilebelt.pointToTile(geom.coordinates[i][0], geom.coordinates[i][1], limits.max_zoom);
+            var quadkey = tilebelt.tileToQuadkey(tile);
+            if(!quadkeys[quadkey]) {
+                quadkeys[quadkey] = true;
                 locked.push(tile);
             }
         }
