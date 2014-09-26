@@ -117,6 +117,8 @@ test('multipoint', function(t){
     t.ok(cover.indexes(multipoint.geometry, limits).length, 'multipoint indexes');
     t.notEqual(cover.indexes(multipoint.geometry, limits)[0], '');
     t.equal(cover.tiles(multipoint.geometry, limits).length, 3)
+    t.equal(cover.indexes(multipoint.geometry, limits).length, 3);
+    t.equal(cover.geojson(multipoint.geometry, limits).features.length, 3);
     t.equal(typeof cover.tiles(multipoint.geometry, limits)[0][0], 'number')
     t.equal(typeof cover.tiles(multipoint.geometry, limits)[0][1], 'number')
     t.equal(typeof cover.tiles(multipoint.geometry, limits)[0][2], 'number')

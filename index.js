@@ -10,15 +10,11 @@ module.exports.geojson = function(geom, limits) {
         locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
     } if(geom.type === 'MultiPoint') {
         for(var i = 0; i < geom.coordinates.length; i++) {
-            locked.push(tilebelt.pointToTile(geom.coordinates[i][0], geom.coordinates[i][1], limits.max_zoom));
-        }
-        var deduped = []
-        for(var i = 0; i < locked.length; i++) {
-            if(!tilebelt.hasTile(deduped, locked[i])){
-                deduped.push(locked[i])
+            var tile = tilebelt.pointToTile(geom.coordinates[i][0], geom.coordinates[i][1], limits.max_zoom)
+            if(!tilebelt.hasTile(locked, tile)) {
+                locked.push(tile);
             }
         }
-        locked = deduped;
     } else {
         var seed = tilebelt.bboxToTile(extent(geom));
         if (!seed[3]) seed = [0, 0, 0];
@@ -42,15 +38,11 @@ module.exports.tiles = function(geom, limits) {
         locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
     } if(geom.type === 'MultiPoint') {
         for(var i = 0; i < geom.coordinates.length; i++) {
-            locked.push(tilebelt.pointToTile(geom.coordinates[i][0], geom.coordinates[i][1], limits.max_zoom));
-        }
-        var deduped = []
-        for(var i = 0; i < locked.length; i++) {
-            if(!tilebelt.hasTile(deduped, locked[i])){
-                deduped.push(locked[i])
+            var tile = tilebelt.pointToTile(geom.coordinates[i][0], geom.coordinates[i][1], limits.max_zoom)
+            if(!tilebelt.hasTile(locked, tile)) {
+                locked.push(tile);
             }
         }
-        locked = deduped;
     } else {
         var seed = tilebelt.bboxToTile(extent(geom));
         if (!seed[3]) seed = [0, 0, 0];
@@ -68,15 +60,11 @@ module.exports.indexes = function(geom, limits) {
         locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
     } if(geom.type === 'MultiPoint') {
         for(var i = 0; i < geom.coordinates.length; i++) {
-            locked.push(tilebelt.pointToTile(geom.coordinates[i][0], geom.coordinates[i][1], limits.max_zoom));
-        }
-        var deduped = []
-        for(var i = 0; i < locked.length; i++) {
-            if(!tilebelt.hasTile(deduped, locked[i])){
-                deduped.push(locked[i])
+            var tile = tilebelt.pointToTile(geom.coordinates[i][0], geom.coordinates[i][1], limits.max_zoom)
+            if(!tilebelt.hasTile(locked, tile)) {
+                locked.push(tile);
             }
         }
-        locked = deduped;
     } else {
         var seed = tilebelt.bboxToTile(extent(geom));
         if (!seed[3]) seed = [0, 0, 0];
