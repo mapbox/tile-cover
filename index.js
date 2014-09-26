@@ -8,7 +8,7 @@ module.exports.geojson = function(geom, limits) {
 
     if (geom.type === 'Point') {
         locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
-    } if(geom.type === 'MultiPoint') {
+    } else if (geom.type === 'MultiPoint') {
         for(var i = 0; i < geom.coordinates.length; i++) {
             var tile = tilebelt.pointToTile(geom.coordinates[i][0], geom.coordinates[i][1], limits.max_zoom)
             if(!tilebelt.hasTile(locked, tile)) {
@@ -36,7 +36,7 @@ module.exports.tiles = function(geom, limits) {
 
     if (geom.type === 'Point') {
         locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
-    } if(geom.type === 'MultiPoint') {
+    } else if(geom.type === 'MultiPoint') {
         for(var i = 0; i < geom.coordinates.length; i++) {
             var tile = tilebelt.pointToTile(geom.coordinates[i][0], geom.coordinates[i][1], limits.max_zoom)
             if(!tilebelt.hasTile(locked, tile)) {
@@ -58,7 +58,7 @@ module.exports.indexes = function(geom, limits) {
 
     if (geom.type === 'Point') {
         locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
-    } if(geom.type === 'MultiPoint') {
+    } else if(geom.type === 'MultiPoint') {
         for(var i = 0; i < geom.coordinates.length; i++) {
             var tile = tilebelt.pointToTile(geom.coordinates[i][0], geom.coordinates[i][1], limits.max_zoom)
             if(!tilebelt.hasTile(locked, tile)) {
