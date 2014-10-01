@@ -125,3 +125,44 @@ test('multipoint', function(t){
     fs.writeFileSync(__dirname+'/fixtures/multipoint_out.geojson', JSON.stringify(cover.geojson(multipoint.geometry, limits)));
     t.end();
 });
+
+test('invalid polygon --- hourglass', function(t) {
+    var invalid = {
+    "type": "Polygon",
+        "coordinates": [
+            [
+                [
+                    -12.034835815429688,
+                    8.901183448260598
+                ],
+                [
+                    -12.060413360595701,
+                    8.899826693726117
+                ],
+                [
+                    -12.036380767822266,
+                    8.873199368734273
+                ],
+                [
+                    -12.059383392333983,
+                    8.871418491385919
+                ],
+                [
+                    -12.034835815429688,
+                    8.901183448260598
+                ]
+            ]
+        ]
+    };
+    var limits = {
+        min_zoom: 1,
+        max_zoom: 12
+    };
+
+    try {
+        cover.tiles(invalid, limits)
+    } catch(err) {
+        t.equal(err.toString(), 'Error: found non-noded intersection between LINESTRING ( -12.060413360595701 8.899826693726117, -12.036380767822266 8.873199368734273 ) and LINESTRING ( -12.059383392333983 8.871418491385919, -12.034835815429688 8.901183448260598 ) [ (-12.047632938440815, 8.885666404927512) ]')
+    }
+    t.end();
+})
