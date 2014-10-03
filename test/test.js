@@ -16,6 +16,20 @@ test('uk', function(t){
     t.end();
 });
 
+test('building', function(t){
+    var building = JSON.parse(fs.readFileSync(__dirname+'/fixtures/building.geojson'));
+    var limits = {
+        min_zoom: 18,
+        max_zoom: 18
+    };
+
+    t.ok(cover.geojson(building, limits), 'building geojson');
+    t.ok(cover.tiles(building, limits).length, 'building tiles');
+    t.ok(cover.indexes(building, limits).length, 'building indexes');
+    fs.writeFileSync(__dirname+'/fixtures/building_out.geojson', JSON.stringify(cover.geojson(building, limits)));
+    t.end();
+});
+
 test('line', function(t){
     var line = JSON.parse(fs.readFileSync(__dirname+'/fixtures/line.geojson'));
     var limits = {
