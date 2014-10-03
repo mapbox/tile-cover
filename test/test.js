@@ -140,6 +140,27 @@ test('multipoint', function(t){
     t.end();
 });
 
+test('multiline', function(t){
+    var multiline = JSON.parse(fs.readFileSync(__dirname+'/fixtures/multiline.geojson'));
+    var limits = {
+        min_zoom: 1,
+        max_zoom: 8
+    };
+
+    t.ok(cover.geojson(multiline.geometry, limits), 'multiline geojson');
+    t.ok(cover.tiles(multiline.geometry, limits).length, 'multiline tiles');
+    t.ok(cover.indexes(multiline.geometry, limits).length, 'multiline indexes');
+    t.notEqual(cover.indexes(multiline.geometry, limits)[0], '');
+    t.equal(cover.tiles(multiline.geometry, limits).length, 20)
+    t.equal(cover.indexes(multiline.geometry, limits).length, 20);
+    t.equal(cover.geojson(multiline.geometry, limits).features.length, 20);
+    t.equal(typeof cover.tiles(multiline.geometry, limits)[0][0], 'number')
+    t.equal(typeof cover.tiles(multiline.geometry, limits)[0][1], 'number')
+    t.equal(typeof cover.tiles(multiline.geometry, limits)[0][2], 'number')
+    fs.writeFileSync(__dirname+'/fixtures/multiline_out.geojson', JSON.stringify(cover.geojson(multiline.geometry, limits)));
+    t.end();
+});
+
 test('invalid polygon --- hourglass', function(t) {
     var invalid = {
     "type": "Polygon",
