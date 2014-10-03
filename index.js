@@ -89,7 +89,7 @@ function splitSeek (tile, geom, locked, limits) {
             intersects = intersect(fc(tilebelt.tileToGeoJSON(tile)), fc(feature(geom)));
         }
         catch(err) {
-            throw new Error(err.message)
+            throw new Error(err.message);
         }
     }
     if (!intersects || intersects.features[0].type === 'GeometryCollection') {
