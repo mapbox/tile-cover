@@ -20,9 +20,9 @@ var limits = {
   	max_zoom: 9
   }
 
-cover.geojson(poly, limits);
-cover.tiles(poly, limits);
-cover.indexes(poly, limits);
+cover.geojson(poly.geom, limits);
+cover.tiles(poly.geom, limits);
+cover.indexes(poly.geom, limits);
 ```
 
 ###Examples
