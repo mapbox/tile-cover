@@ -192,7 +192,7 @@ test('high zoom', function(t){
         min_zoom: 25,
         max_zoom: 25
     };
-    
+
     t.ok(cover.geojson(building, limits), 'building geojson');
     t.ok(cover.tiles(building, limits).length, 'building tiles');
     t.ok(cover.indexes(building, limits).length, 'building indexes');
