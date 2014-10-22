@@ -189,8 +189,8 @@ test('high zoom', function(t){
     building = building.geometry
 
     var limits = {
-        min_zoom: 25,
-        max_zoom: 25
+        min_zoom: 23,
+        max_zoom: 23
     };
 
     t.ok(cover.geojson(building, limits), 'building geojson');
