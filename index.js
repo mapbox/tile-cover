@@ -21,7 +21,6 @@ module.exports.tiles = function (geom, limits) {
 
 module.exports.indexes = function (geom, limits) {
     var locked = getLocked(geom, limits);
-
     return locked.map(function (tile) {
         return tilebelt.tileToQuadkey(tile);
     });
@@ -57,9 +56,9 @@ function getLocked (geom, limits) {
     } else if (geom.type === 'MultiPolygon') {
         var tileHash = {};
         for(var i = 0; i < geom.coordinates.length; i++) {
-            var tiles = polyRingCover(geom.coordinates, limits.max_zoom);
-            for(var k = 0; k < tiles.length; k++) {
-                tileHash[tiles[k][0]+'/'+tiles[k][1]+'/'+tiles[k][2]] = true;
+            var lineHash = Object.keys(polyRingCover(geom.coordinates[i], limits.max_zoom));
+            for(var k = 0; k < lineHash.length; k++) {
+                tileHash[lineHash[k]] = true;
             }
         }
         locked = hashToArray(tileHash);
