@@ -83,7 +83,7 @@ test('multiline', function(t){
     var multiline = JSON.parse(fs.readFileSync(__dirname+'/fixtures/multiline.geojson'));
     var limits = {
         min_zoom: 1,
-        max_zoom: 8
+        max_zoom: 10
     };
 
     t.ok(cover.geojson(multiline.geometry, limits), 'multiline geojson');

@@ -42,29 +42,33 @@ function getLocked (geom, limits) {
             }
         }
     } else if (geom.type === 'LineString') {
-        return lineCover(geom.coordinates, limits.max_zoom);
+        locked = hashToArray(lineCover(geom.coordinates, limits.max_zoom));
     } else if (geom.type === 'MultiLineString') {
         var tileHash = {};
         for(var i = 0; i < geom.coordinates.length; i++) {
-            var tiles = lineCover(geom.coordinates[i], limits.max_zoom);
-            //console.log(tiles)
+            var lineHash = Object.keys(lineCover(geom.coordinates[i], limits.max_zoom));
+            for(var k = 0; k < lineHash.length; k++) {
+                tileHash[lineHash[k]] = true;
+            }
+        }
+        locked = hashToArray(tileHash);
+    } else if (geom.type === 'Polygon') {
+        return hashToArray(polyRingCover(geom.coordinates, limits.max_zoom));
+    } else if (geom.type === 'MultiPolygon') {
+        var tileHash = {};
+        for(var i = 0; i < geom.coordinates.length; i++) {
+            var tiles = polyRingCover(geom.coordinates, limits.max_zoom);
             for(var k = 0; k < tiles.length; k++) {
                 tileHash[tiles[k][0]+'/'+tiles[k][1]+'/'+tiles[k][2]] = true;
             }
         }
-        return hashToArray(tileHash);
-    } else if (geom.type === 'Polygon') {
-        return polyRingCover(geom.coordinates, limits.max_zoom);
-    } else if (geom.type === 'MultiPolygon') {
-
+        locked = hashToArray(tileHash);
     } else {
         throw new Error('Geoemtry type not implemented')
-        var seed = tilebelt.bboxToTile(extent(geom));
-        if (!seed[3]) seed = [0, 0, 0];
-        splitSeek(seed, geom, locked, limits);
+    }
+    if(limits.min_zoom !== limits.max_zoom){
         locked = mergeTiles(locked, limits);
     }
-
     return locked;
 }
 
@@ -139,7 +143,6 @@ function polyRingCover(ring, max_zoom) {
         var line = [[bbox[0], bbox[3]], 
                     [bbox[1], bbox[3]]];
         for(var i = 0; i < segments.length; i++) {
-            //console.log(segments[i])
             var intersection = lineIntersects(line[0][0], line[0][1], line[1][0], line[1][1], 
                 segments[i][0][0], segments[i][0][1], segments[i][1][0], segments[i][1][1]);
             if(intersection[0]) {
@@ -171,7 +174,7 @@ function polyRingCover(ring, max_zoom) {
         }
     }
     
-    return Object.keys(tileHash);
+    return tileHash;
 }
 
 // modified from http://jsfiddle.net/justin_c_rounds/Gd2S2/light/
@@ -225,7 +228,6 @@ function lineCover(coordinates, max_zoom) {
         // encode coordinates as tile relative pairs
         segments[i][0] = pointToTileFraction(segments[i][0][0], segments[i][0][1], max_zoom);
         segments[i][1] = pointToTileFraction(segments[i][1][0], segments[i][1][1], max_zoom);       
-        //console.log(segments[i])
         // modified Bresenham digital differential analyzer algorithm
         var x0 = segments[i][0][0];
             y0 = segments[i][0][1];
@@ -259,7 +261,7 @@ function lineCover(coordinates, max_zoom) {
             if (e2 < dx){ err += dx; Math.round(y0 += sy); }
         }
     }
-    return Object.keys(tileHash);
+    return tileHash;
 }
 
 function pointToTileFraction (lon, lat, z) {
@@ -283,7 +285,8 @@ function hashToArray(hash) {
     keys = Object.keys(hash);
     var tiles = []
     for(var i = 0; i < keys.length; i++) {
-        tile.push(keys[i].split('/'));
+        var tileStrings = keys[i].split('/');
+        tiles.push([parseInt(tileStrings[0]), parseInt(tileStrings[1]), parseInt(tileStrings[2])]);
     }
     return tiles;
 }
