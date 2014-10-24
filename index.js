@@ -5,7 +5,6 @@ var tilebelt = require('tilebelt'),
 
 module.exports.geojson = function (geom, limits) {
     var locked = getLocked(geom, limits);
-
     var tileFeatures = locked.map(function (t) {
         return tilebelt.tileToGeoJSON(t);
     });
@@ -17,7 +16,6 @@ module.exports.geojson = function (geom, limits) {
 
 module.exports.tiles = function (geom, limits) {
     var locked = getLocked(geom, limits);
-
     return locked;
 };
 
@@ -31,7 +29,6 @@ module.exports.indexes = function (geom, limits) {
 
 function getLocked (geom, limits) {
     var locked = [];
-
     if (geom.type === 'Point') {
         locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
     } else if (geom.type === 'MultiPoint') {
@@ -57,7 +54,7 @@ function getLocked (geom, limits) {
         }
         return hashToArray(tileHash);
     } else if (geom.type === 'Polygon') {
-
+        return polyRingCover(geom.coordinates, limits.max_zoom);
     } else if (geom.type === 'MultiPolygon') {
 
     } else {
