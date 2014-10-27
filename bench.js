@@ -3,7 +3,12 @@ var cover = require('./index.js');
 var fs = require('fs');
 var poly = JSON.parse(fs.readFileSync('./test/fixtures/building.geojson'));
 var line = JSON.parse(fs.readFileSync('./test/fixtures/road.geojson'));
-var suite = new Benchmark.Suite('tile-cover')
+
+var suite = new Benchmark.Suite('tile-cover',{
+    onError: function(err) {
+        console.log(err);
+    }
+});
 
 suite.add('scan building - z6', function() {
     cover(poly, {min_zoom: 6, max_zoom: 6})
