@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/mapbox/tile-cover",
   "devDependencies": {
+    "benchmark": "^1.0.0",
     "tape": "^2.14.0"
   },
   "dependencies": {

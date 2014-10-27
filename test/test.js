@@ -83,7 +83,7 @@ test('multiline', function(t){
     var multiline = JSON.parse(fs.readFileSync(__dirname+'/fixtures/multiline.geojson'));
     var limits = {
         min_zoom: 1,
-        max_zoom: 10
+        max_zoom: 8
     };
 
     t.ok(cover.geojson(multiline.geometry, limits), 'multiline geojson');
@@ -197,6 +197,20 @@ test('high zoom', function(t){
     t.ok(cover.tiles(building, limits).length, 'building tiles');
     t.ok(cover.indexes(building, limits).length, 'building indexes');
     fs.writeFileSync(__dirname+'/fixtures/highzoom_out.geojson', JSON.stringify(cover.geojson(building, limits), 'building tiles'));
+    t.end();
+});
+
+test('small polygon', function(t){
+    var building = JSON.parse(fs.readFileSync(__dirname+'/fixtures/small_poly.geojson'));
+    var limits = {
+        min_zoom: 10,
+        max_zoom: 10
+    };
+
+    t.ok(cover.geojson(building, limits), 'small_poly geojson');
+    t.ok(cover.tiles(building, limits).length, 'small_poly tiles');
+    t.ok(cover.indexes(building, limits).length, 'small_poly indexes');
+    fs.writeFileSync(__dirname+'/fixtures/small_poly_out.geojson', JSON.stringify(cover.geojson(building, limits), 'building tiles'));
     t.end();
 });
 

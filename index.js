@@ -45,20 +45,21 @@ function getLocked (geom, limits) {
     } else if (geom.type === 'MultiLineString') {
         var tileHash = {};
         for(var i = 0; i < geom.coordinates.length; i++) {
-            var lineHash = Object.keys(lineCover(geom.coordinates[i], limits.max_zoom));
-            for(var k = 0; k < lineHash.length; k++) {
-                tileHash[lineHash[k]] = true;
-            }
+            tileHash = hashMerge(tileHash, lineCover(geom.coordinates[i], limits.max_zoom));
         }
         locked = hashToArray(tileHash);
     } else if (geom.type === 'Polygon') {
-        return hashToArray(polyRingCover(geom.coordinates, limits.max_zoom));
+        var tileHash = polyRingCover(geom.coordinates, limits.max_zoom);
+        for(var i = 0; i < geom.coordinates.length; i++) {
+            tileHash = hashMerge(tileHash, lineCover(geom.coordinates[i], limits.max_zoom));
+        }
+        return hashToArray(tileHash);
     } else if (geom.type === 'MultiPolygon') {
         var tileHash = {};
         for(var i = 0; i < geom.coordinates.length; i++) {
-            var lineHash = Object.keys(polyRingCover(geom.coordinates[i], limits.max_zoom));
-            for(var k = 0; k < lineHash.length; k++) {
-                tileHash[lineHash[k]] = true;
+            var polyHash = Object.keys(polyRingCover(geom.coordinates[i], limits.max_zoom));
+            for(var k = 0; k < polyHash.length; k++) {
+                tileHash[polyHash[k]] = true;
             }
         }
         locked = hashToArray(tileHash);
@@ -96,23 +97,6 @@ function mergeTiles (tiles, limits) {
         return mergeTiles(merged, limits);
     }
 }
-
-
-function feature (geom) {
-    return {
-        type: 'Feature',
-        geometry: geom,
-        properties: {}
-    };
-}
-
-function fc (feat) {
-    return {
-        type: 'FeatureCollection',
-        features: [feat]
-    };
-}
-
 
 function polyRingCover(ring, max_zoom) {
     // construct segments
@@ -167,10 +151,8 @@ function polyRingCover(ring, max_zoom) {
         y++;
     }
     // add any missing tiles with a segments pass
-    for(var i = 0; i < ring.length; i++) { 
-        for(var k = 0; k < ring[i].length - 1; k++) {
-            segments.push([[ring[i][k][0], ring[i][k][1]], [ring[i][k+1][0], ring[i][k+1][1]]]);
-        }
+    for(var i = 0; i < ring.length; i++) {
+        tileHash = hashMerge(tileHash, lineCover(ring[i], max_zoom));
     }
     
     return tileHash;
@@ -205,7 +187,6 @@ function lineIntersects(line1StartX, line1StartY, line1EndX, line1EndY, line2Sta
     // if we cast these lines infinitely in both directions, they intersect here:
     res[0] = line1StartX + (a * (line1EndX - line1StartX));
     res[1] = line1StartY + (a * (line1EndY - line1StartY));
-
 
     // if line2 is a segment and line1 is infinite, they intersect if:
     if (b > 0 && b < 1) {
@@ -280,6 +261,14 @@ function pointToTileFraction (lon, lat, z) {
     return [tile[0]+xPercentOffset, tile[1]+yPercentOffset];
 }
 
+function hashMerge(hash1, hash2) {
+    var keys = Object.keys(hash2)
+    for(var i = 0; i < keys.length; i++) {
+        hash1[keys[i]] = true;
+    }
+    return hash1;
+}
+
 function hashToArray(hash) {
     keys = Object.keys(hash);
     var tiles = []
@@ -288,4 +277,19 @@ function hashToArray(hash) {
         tiles.push([parseInt(tileStrings[0]), parseInt(tileStrings[1]), parseInt(tileStrings[2])]);
     }
     return tiles;
+}
+
+function feature (geom) {
+    return {
+        type: 'Feature',
+        geometry: geom,
+        properties: {}
+    };
+}
+
+function fc (feat) {
+    return {
+        type: 'FeatureCollection',
+        features: [feat]
+    };
 }
