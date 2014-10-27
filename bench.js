@@ -1,43 +1,34 @@
 var Benchmark = require('benchmark');
-var cover = require('./index.js');
+var cover = require('./index.js').tiles;
 var fs = require('fs');
-var poly = JSON.parse(fs.readFileSync('./test/fixtures/building.geojson'));
+
+var polygon = JSON.parse(fs.readFileSync('./test/fixtures/building.geojson'));
 var line = JSON.parse(fs.readFileSync('./test/fixtures/road.geojson'));
+var point = JSON.parse(fs.readFileSync('./test/fixtures/point.geojson'));
+var zooms = [6,12,18,20,22,25,28];
 
 var suite = new Benchmark.Suite('tile-cover',{
     onError: function(err) {
-        console.log(JSON.stringify(err));
+        console.log(err);
     }
 });
 
-suite.add('scan building - z6', function() {
-    cover(poly, {min_zoom: 6, max_zoom: 6})
-}).add('scan building - z12', function() {
-    cover(poly, {min_zoom: 12, max_zoom: 12})
-}).add('scan building - z18', function() {
-    cover(poly, {min_zoom: 18, max_zoom: 18})
-}).add('scan building - z20', function() {
-    cover(poly, {min_zoom: 20, max_zoom: 20})
-}).add('scan building - z22', function() {
-    cover(poly, {min_zoom: 22, max_zoom: 22})
-}).add('scan building - z25', function() {
-    cover(poly, {min_zoom: 25, max_zoom: 25})
-}).add('scan building - z28', function() {
-    cover(poly, {min_zoom: 28, max_zoom: 28})
-}).add('scan road - z6', function() {
-    cover(line, {min_zoom: 6, max_zoom: 6})
-}).add('scan road - z12', function() {
-    cover(line, {min_zoom: 12, max_zoom: 12})
-}).add('scan road - z18', function() {
-    cover(line, {min_zoom: 18, max_zoom: 18})
-}).add('scan road - z20', function() {
-    cover(line, {min_zoom: 20, max_zoom: 20})
-}).add('scan road - z22', function() {
-    cover(line, {min_zoom: 22, max_zoom: 22})
-}).add('scan road - z25', function() {
-    cover(line, {min_zoom: 25, max_zoom: 25})
-}).add('scan road - z28', function() {
-    cover(line, {min_zoom: 28, max_zoom: 28})
-}).on('cycle', function(event) {
+zooms.forEach(function(zoom){
+    addBench(suite, point, 'point', zoom, zoom);
+});
+zooms.forEach(function(zoom){
+    addBench(suite, line, 'road', zoom, zoom);
+});
+zooms.forEach(function(zoom){
+    addBench(suite, polygon, 'building', zoom, zoom);
+});
+
+suite.on('cycle', function(event) {
     console.log(String(event.target));
 }).run();
+
+function addBench(suite, geometry, name, min_zoom, max_zoom) {
+    suite.add('scan '+name+' - z'+min_zoom+' - z'+max_zoom, function() {
+        cover(geometry, {min_zoom: min_zoom, max_zoom: max_zoom});
+    });
+}
