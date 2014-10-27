@@ -6,7 +6,7 @@ var line = JSON.parse(fs.readFileSync('./test/fixtures/road.geojson'));
 
 var suite = new Benchmark.Suite('tile-cover',{
     onError: function(err) {
-        console.log(err);
+        console.log(JSON.stringify(err));
     }
 });
 
