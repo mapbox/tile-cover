@@ -48,9 +48,6 @@ function getLocked (geom, limits) {
         locked = hashToArray(tileHash);
     } else if (geom.type === 'Polygon') {
         var tileHash = polyRingCover(geom.coordinates, limits.max_zoom);
-        for(var i = 0; i < geom.coordinates.length; i++) {
-            tileHash = hashMerge(tileHash, lineCover(geom.coordinates[i], limits.max_zoom));
-        }
         return hashToArray(tileHash);
     } else if (geom.type === 'MultiPolygon') {
         var tileHash = {};
@@ -196,11 +193,18 @@ function lineIntersects(line1StartX, line1StartY, line1EndX, line1EndY, line2Sta
 }
 
 function lineCover(coordinates, max_zoom) {
-    // break into segments
+    // break into segments and calculate bbox
     var segments = [];
-    for(var i = 0; i < coordinates.length - 1; i++) { 
-        segments.push([[coordinates[i][0], coordinates[i][1]], [coordinates[i+1][0], coordinates[i+1][1]]]);
+    var bbox = [coordinates[0][0], coordinates[0][1], coordinates[0][0], coordinates[0][1]];
+    for(var i = 0; i < coordinates.length - 1; i++) {
+        var iNext = i+1;
+        segments.push([[coordinates[i][0], coordinates[i][1]], [coordinates[iNext][0], coordinates[iNext][1]]]);
+        if(coordinates[iNext][0] < bbox[0]) bbox[0] = coordinates[iNext][0];
+        if(coordinates[iNext][1] < bbox[1]) bbox[1] = coordinates[iNext][1];
+        if(coordinates[iNext][0] > bbox[2]) bbox[2] = coordinates[iNext][0];
+        if(coordinates[iNext][1] > bbox[3]) bbox[3] = coordinates[iNext][1];
     }
+    //console.log(bbox)
     var tileHash = {};
     for (var i = 0; i < segments.length; i ++) {
         // encode coordinates as tile relative pairs
