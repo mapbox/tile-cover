@@ -1,7 +1,5 @@
 var tilebelt = require('tilebelt'),
-    extent = require('geojson-extent'),
-    bboxIntersects = require('bbox-intersect'),
-    intersect = require('turf-intersect');
+    extent = require('geojson-extent');
 
 module.exports.geojson = function (geom, limits) {
     var locked = getLocked(geom, limits);
@@ -235,6 +233,7 @@ function lineCover(coordinates, max_zoom) {
         while(true) {
             tileHash[x0+'/'+y0+'/'+max_zoom] = true;
             if(x0 > x1) throw new Error('Unable to find end of segment');
+            //console.log(x0 +' : '+y0)
             if (x0==x1 && y0==y1) break;
             var e2 = 2*err;
             if (e2 >-dy){ err -= dy; Math.round(x0 += sx); }

@@ -210,7 +210,21 @@ test('small polygon', function(t){
     t.ok(cover.geojson(building, limits), 'small_poly geojson');
     t.ok(cover.tiles(building, limits).length, 'small_poly tiles');
     t.ok(cover.indexes(building, limits).length, 'small_poly indexes');
-    fs.writeFileSync(__dirname+'/fixtures/small_poly_out.geojson', JSON.stringify(cover.geojson(building, limits), 'building tiles'));
+    fs.writeFileSync(__dirname+'/fixtures/small_poly_out.geojson', JSON.stringify(cover.geojson(building, limits), 'small_poly tiles'));
+    t.end();
+});
+
+test('small polygon', function(t){
+    var spiked = JSON.parse(fs.readFileSync(__dirname+'/fixtures/spiked.geojson'));
+    var limits = {
+        min_zoom: 10,
+        max_zoom: 10
+    };
+
+    t.ok(cover.geojson(spiked, limits), 'spiked geojson');
+    t.ok(cover.tiles(spiked, limits).length, 'spiked tiles');
+    t.ok(cover.indexes(spiked, limits).length, 'spiked indexes');
+    fs.writeFileSync(__dirname+'/fixtures/spiked_out.geojson', JSON.stringify(cover.geojson(spiked, limits), 'spiked tiles'));
     t.end();
 });
 
