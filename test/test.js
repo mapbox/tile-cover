@@ -214,7 +214,7 @@ test('small polygon', function(t){
     t.end();
 });
 
-test('small polygon', function(t){
+test('spiked polygon', function(t){
     var spiked = JSON.parse(fs.readFileSync(__dirname+'/fixtures/spiked.geojson'));
     var limits = {
         min_zoom: 10,

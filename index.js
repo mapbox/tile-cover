@@ -236,8 +236,8 @@ function lineCover(coordinates, max_zoom) {
             //console.log(x0 +' : '+y0)
             if (x0==x1 && y0==y1) break;
             var e2 = 2*err;
-            if (e2 >-dy){ err -= dy; Math.round(x0 += sx); }
-            if (e2 < dx){ err += dx; Math.round(y0 += sy); }
+            if (e2 >-dy){ err -= dy; x0 += sx; }
+            else if (e2 < dx){ err += dx; y0 += sy; }
         }
     }
     return tileHash;

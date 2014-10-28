@@ -28,7 +28,10 @@ suite.on('cycle', function(event) {
 }).run();
 
 function addBench(suite, geometry, name, min_zoom, max_zoom) {
-    suite.add('scan '+name+' - z'+min_zoom+' - z'+max_zoom, function() {
-        cover(geometry, {min_zoom: min_zoom, max_zoom: max_zoom});
+    suite.add('scan '+name+' - z'+min_zoom+' - z'+max_zoom, {
+    fn: function() {
+            cover(geometry, {min_zoom: min_zoom, max_zoom: max_zoom});
+        },
+    maxTime: 1
     });
 }
