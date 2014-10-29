@@ -25,6 +25,18 @@ cover.tiles(poly.geom, limits);
 cover.indexes(poly.geom, limits);
 ```
 
+###Tests
+
+```bash
+npm test
+```
+
+###Benchmarks
+
+```bash
+node bench.js
+```
+
 ###Examples
 
 #####Polygons:
