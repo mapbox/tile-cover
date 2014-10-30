@@ -2,6 +2,7 @@ var cover = require('../'),
     test = require('tape'),
     fs = require('fs');
     turf = require('turf-intersect');
+    
 
 test('the world', function(t){
 
@@ -13,12 +14,17 @@ test('the world', function(t){
             max_zoom : 6
         }
         var countryGeom = countryFC.features[0].geometry; //just the geometry from the country featureCollection
-        var countryTiles = cover.geojson(countryGeom, limits); 
+        var countryCover = cover.geojson(countryGeom, limits); // returns a feature collection of tiles 
+        var countryTiles = countryCover.features; //  
         
-        t.ok(countryTiles, 'country geojson');
-        var intersect = turf.intersect(countryTiles, countryFC);
-        t.ok(intersect);
-        console.log(intersect);
+        t.ok(countryCover, 'country geojson');
+        
+        countryTiles.forEach(function(tile){
+            var intersect = turf.intersect(tile, countryCover);
+            t.ok(intersect);
+            console.log(intersect);
+        });
+        
         
     });
     t.end();
