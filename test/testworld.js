@@ -23,7 +23,7 @@ test('the world', function(t){
         countryTiles.forEach(function(tile){
             console.log(countryName)
             var overlap = intersect(tile, countryGeom);
-            t.ok(overlap);
+            t.notEqual(overlap.features[0].type, 'GeometryCollection')
         });
     });
     t.end();
