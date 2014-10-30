@@ -193,19 +193,32 @@ function lineIntersects(line1StartX, line1StartY, line1EndX, line1EndY, line2Sta
 }
 
 function lineCover(coordinates, max_zoom) {
+    var tileHash = {};
     // break into segments and calculate bbox
     var segments = [];
-    var bbox = [coordinates[0][0], coordinates[0][1], coordinates[0][0], coordinates[0][1]];
+    //var bbox = [coordinates[0][0], coordinates[0][1], coordinates[0][0], coordinates[0][1]];
     for(var i = 0; i < coordinates.length - 1; i++) {
         var iNext = i+1;
         segments.push([[coordinates[i][0], coordinates[i][1]], [coordinates[iNext][0], coordinates[iNext][1]]]);
-        if(coordinates[iNext][0] < bbox[0]) bbox[0] = coordinates[iNext][0];
-        if(coordinates[iNext][1] < bbox[1]) bbox[1] = coordinates[iNext][1];
-        if(coordinates[iNext][0] > bbox[2]) bbox[2] = coordinates[iNext][0];
-        if(coordinates[iNext][1] > bbox[3]) bbox[3] = coordinates[iNext][1];
+        //if(coordinates[iNext][0] < bbox[0]) bbox[0] = coordinates[iNext][0];
+        //if(coordinates[iNext][1] < bbox[1]) bbox[1] = coordinates[iNext][1];
+        //if(coordinates[iNext][0] > bbox[2]) bbox[2] = coordinates[iNext][0];
+        //if(coordinates[iNext][1] > bbox[3]) bbox[3] = coordinates[iNext][1];
     }
-    //console.log(bbox)
-    var tileHash = {};
+  /*  var bboxTile = tilebelt.bboxToTile(bbox);
+    //console.log(bboxTile)
+    if(bboxTile[2] === max_zoom) {
+        //console.log('\n\nzoom equal: '+bboxTile[2]+' = '+max_zoom+'\n\n')
+        tileHash[x0+'/'+y0+'/'+max_zoom] = true;
+        return tileHash;
+    } else if(bboxTile[2] > max_zoom) {
+        //console.log('\n\nzoom greater: '+bboxTile[2]+' > '+max_zoom+'\n\n')
+        //console.log(bbox)
+        var center = [(((bbox[2] - bbox[0]) / 2) +bbox[0]), (((bbox[3] - bbox[1]) / 2) + bbox[1])];
+        var centerTile = tilebelt.pointToTile(center[0], center[1], max_zoom);
+        tileHash[centerTile[0]+'/'+centerTile[1]+'/'+max_zoom] = true;
+    }*/
+
     for (var i = 0; i < segments.length; i ++) {
         // encode coordinates as tile relative pairs
         segments[i][0] = pointToTileFraction(segments[i][0][0], segments[i][0][1], max_zoom);

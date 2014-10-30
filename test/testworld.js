@@ -5,10 +5,10 @@ var cover = require('../'),
     
 
 test('the world', function(t){
-
     var countries = fs.readdirSync(__dirname+'/fixtures/world');
-    countries.forEach(function(country){
-        var country = JSON.parse(fs.readFileSync(__dirname+'/fixtures/world/'+ country)); //each country file is a featureCollection, hopefully only one feature
+    countries.forEach(function(countryName){
+        var country = JSON.parse(fs.readFileSync(__dirname+'/fixtures/world/'+ countryName)); //each country file is a featureCollection, hopefully only one feature
+        if(country.features.length > 1) throw new Error('Invalid country; more than 1 feature')
         var limits = {
             min_zoom : 6,
             max_zoom : 6
@@ -21,12 +21,10 @@ test('the world', function(t){
         t.ok(countryCover, 'country geojson');
         
         countryTiles.forEach(function(tile){
-            var overlap = intersect(tile, countryCover);
-            console.log(countryFeature.properties.name, overlap.features[0]);
+            console.log(countryName)
+            var overlap = intersect(tile, countryGeom);
             t.ok(overlap);
         });
-        
-        
     });
     t.end();
 });
