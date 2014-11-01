@@ -212,7 +212,7 @@ test('small polygon', function(t){
     t.ok(cover.geojson(building, limits), 'small_poly geojson');
     t.ok(cover.tiles(building, limits).length, 'small_poly tiles');
     t.ok(cover.indexes(building, limits).length, 'small_poly indexes');
-    compareFixture(t, building, limits, __dirname+'/fixtures/small_poly.geojson');
+    compareFixture(t, building, limits, __dirname+'/fixtures/small_poly_out.geojson');
     t.end();
 });
 
@@ -226,7 +226,7 @@ test('spiked polygon', function(t){
     t.ok(cover.geojson(spiked, limits), 'spiked geojson');
     t.ok(cover.tiles(spiked, limits).length, 'spiked tiles');
     t.ok(cover.indexes(spiked, limits).length, 'spiked indexes');
-    compareFixture(t, spiked, limits, __dirname+'/fixtures/spiked.geojson');
+    compareFixture(t, spiked, limits, __dirname+'/fixtures/spiked_out.geojson');
     t.end();
 });
 
