@@ -218,9 +218,15 @@ function compareFixture(t, geom, limits, filepath) {
         geometry: geom
     });
 
-    var expected = JSON.parse(JSON.stringify(JSON.parse(fs.readFileSync(filepath)), roundify, 2));
     if (REGEN) fs.writeFileSync(filepath, JSON.stringify(result, roundify, 2));
-    t.deepEqual(JSON.parse(JSON.stringify(result, roundify, 2)), expected);
+    var expected = JSON.parse(JSON.stringify(JSON.parse(fs.readFileSync(filepath)), roundify, 2));
+
+    // Skip the massive deepEquals diff if feature length is not the same.
+    if (result.features.length !== expected.features.length) {
+        t.equal(result.features.length, expected.features.length);
+    } else {
+        t.deepEqual(JSON.parse(JSON.stringify(result, roundify, 2)), expected);
+    }
 }
 
 function roundify(key, val) {
