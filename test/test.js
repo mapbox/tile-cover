@@ -2,6 +2,8 @@ var cover = require('../'),
     test = require('tape'),
     fs = require('fs');
 
+var REGEN = process.env.REGEN;
+
 test('point', function(t){
     var point = {
         "type": "Feature",
@@ -26,7 +28,7 @@ test('point', function(t){
     t.equal(typeof cover.tiles(point.geometry, limits)[0][0], 'number');
     t.equal(typeof cover.tiles(point.geometry, limits)[0][1], 'number');
     t.equal(typeof cover.tiles(point.geometry, limits)[0][2], 'number');
-    fs.writeFileSync(__dirname+'/fixtures/point_out.geojson', JSON.stringify(cover.geojson(point.geometry, limits)));
+    compareFixture(t, point.geometry, limits, __dirname+'/fixtures/point_out.geojson');
     t.end();
 });
 
@@ -40,7 +42,7 @@ test('line', function(t){
     t.ok(cover.geojson(line.geometry, limits), 'line geojson');
     t.ok(cover.tiles(line.geometry, limits).length, 'line tiles');
     t.ok(cover.indexes(line.geometry, limits).length, 'line indexes');
-    fs.writeFileSync(__dirname+'/fixtures/line_out.geojson', JSON.stringify(cover.geojson(line.geometry, limits)));
+    compareFixture(t, line.geometry, limits, __dirname+'/fixtures/line_out.geojson');
     t.end();
 });
 
@@ -54,7 +56,7 @@ test('polygon', function(t){
     t.ok(cover.geojson(polygon, limits), 'polygon geojson');
     t.ok(cover.tiles(polygon, limits).length, 'polygon tiles');
     t.ok(cover.indexes(polygon, limits).length, 'polygon indexes');
-    fs.writeFileSync(__dirname+'/fixtures/polygon_out.geojson', JSON.stringify(cover.geojson(polygon, limits)));
+    compareFixture(t, polygon, limits, __dirname+'/fixtures/polygon_out.geojson');
     t.end();
 });
 
@@ -75,7 +77,7 @@ test('multipoint', function(t){
     t.equal(typeof cover.tiles(multipoint.geometry, limits)[0][0], 'number');
     t.equal(typeof cover.tiles(multipoint.geometry, limits)[0][1], 'number');
     t.equal(typeof cover.tiles(multipoint.geometry, limits)[0][2], 'number');
-    fs.writeFileSync(__dirname+'/fixtures/multipoint_out.geojson', JSON.stringify(cover.geojson(multipoint.geometry, limits)));
+    compareFixture(t, multipoint.geometry, limits, __dirname+'/fixtures/multipoint_out.geojson');
     t.end();
 });
 
@@ -96,7 +98,7 @@ test('multiline', function(t){
     t.equal(typeof cover.tiles(multiline.geometry, limits)[0][0], 'number');
     t.equal(typeof cover.tiles(multiline.geometry, limits)[0][1], 'number');
     t.equal(typeof cover.tiles(multiline.geometry, limits)[0][2], 'number');
-    fs.writeFileSync(__dirname+'/fixtures/multiline_out.geojson', JSON.stringify(cover.geojson(multiline.geometry, limits)));
+    compareFixture(t, multiline.geometry, limits, __dirname+'/fixtures/multiline_out.geojson');
     t.end();
 });
 
@@ -110,7 +112,7 @@ test('uk', function(t){
     t.ok(cover.geojson(uk.geometry, limits), 'uk geojson');
     t.ok(cover.tiles(uk.geometry, limits).length, 'uk tiles');
     t.ok(cover.indexes(uk.geometry, limits).length, 'uk indexes');
-    fs.writeFileSync(__dirname+'/fixtures/uk_out.geojson', JSON.stringify(cover.geojson(uk.geometry, limits)));
+    compareFixture(t, uk.geometry, limits, __dirname+'/fixtures/uk_out.geojson');
     t.end();
 });
 
@@ -124,7 +126,7 @@ test('building', function(t){
     t.ok(cover.geojson(building, limits), 'building geojson');
     t.ok(cover.tiles(building, limits).length, 'building tiles');
     t.ok(cover.indexes(building, limits).length, 'building indexes');
-    fs.writeFileSync(__dirname+'/fixtures/building_out.geojson', JSON.stringify(cover.geojson(building, limits)));
+    compareFixture(t, building, limits, __dirname+'/fixtures/building_out.geojson');
     t.end();
 });
 
@@ -138,8 +140,8 @@ test('russia', function(t){
     t.ok(cover.geojson(russia, limits), 'russia geojson');
     t.ok(cover.tiles(russia, limits).length, 'russia tiles');
     t.ok(cover.indexes(russia, limits).length, 'russia indexes');
-    t.equal(cover.indexes(russia, limits).length, 457);
-    fs.writeFileSync(__dirname+'/fixtures/russia_out.geojson', JSON.stringify(cover.geojson(russia, limits), 'russia tiles'));
+    t.equal(cover.indexes(russia, limits).length, 254);
+    compareFixture(t, russia, limits, __dirname+'/fixtures/russia_out.geojson');
     t.end();
 });
 
@@ -196,7 +198,7 @@ test('high zoom', function(t){
     t.ok(cover.geojson(building, limits), 'building geojson');
     t.ok(cover.tiles(building, limits).length, 'building tiles');
     t.ok(cover.indexes(building, limits).length, 'building indexes');
-    fs.writeFileSync(__dirname+'/fixtures/highzoom_out.geojson', JSON.stringify(cover.geojson(building, limits), 'building tiles'));
+    compareFixture(t, building, limits, __dirname+'/fixtures/highzoom_out.geojson');
     t.end();
 });
 
@@ -207,3 +209,22 @@ function f(g, name){
         geometry: g
     };
 }
+
+function compareFixture(t, geom, limits, filepath) {
+    var result = cover.geojson(geom, limits);
+    result.features.push({
+        type: 'Feature',
+        properties: {name:'original', stroke:'#f44', fill:'#f44'},
+        geometry: geom
+    });
+
+    var expected = JSON.parse(JSON.stringify(JSON.parse(fs.readFileSync(filepath)), roundify, 2));
+    if (REGEN) fs.writeFileSync(filepath, JSON.stringify(result, roundify, 2));
+    t.deepEqual(JSON.parse(JSON.stringify(result, roundify, 2)), expected);
+}
+
+function roundify(key, val) {
+    if (typeof val !== 'number') return val;
+    return parseFloat(val.toFixed(8));
+}
+
