@@ -48,7 +48,7 @@ function getLocked (geom, limits) {
         locked = hashToArray(tileHash);
     } else if (geom.type === 'Polygon') {
         var tileHash = polyRingCover(geom.coordinates, limits.max_zoom);
-        return hashToArray(tileHash);
+        locked = hashToArray(tileHash);
     } else if (geom.type === 'MultiPolygon') {
         var tileHash = {};
         for(var i = 0; i < geom.coordinates.length; i++) {
