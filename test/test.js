@@ -217,6 +217,16 @@ function compareFixture(t, geom, limits, filepath) {
         properties: {name:'original', stroke:'#f44', fill:'#f44'},
         geometry: geom
     });
+    // Sort features to ensure changes such that changes to tile cover
+    // order is not considered significant.
+    result.features.sort(function(a, b) {
+        if (a.properties.name === 'original') return 1;
+        if (b.properties.name === 'original') return -1;
+        return a.geometry.coordinates[0][0] < b.geometry.coordinates[0][0] ? -1 :
+            a.geometry.coordinates[0][0] > b.geometry.coordinates[0][0] ? 1 :
+            a.geometry.coordinates[0][1] < b.geometry.coordinates[0][1] ? -1 :
+            a.geometry.coordinates[0][1] > b.geometry.coordinates[0][1] ? 1 : 0;
+    });
 
     if (REGEN) fs.writeFileSync(filepath, JSON.stringify(result, roundify, 2));
     var expected = JSON.parse(JSON.stringify(JSON.parse(fs.readFileSync(filepath)), roundify, 2));
