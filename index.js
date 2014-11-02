@@ -94,13 +94,7 @@ function mergeTiles (tiles, limits) {
 }
 
 function polyRingCover(ring, max_zoom) {
-    // construct segments
-    var segments = [];
-    for(var i = 0; i < ring.length; i++) {
-        for(var k = 0; k < ring[i].length - 1; k++) {
-            segments.push([[ring[i][k][0], ring[i][k][1]], [ring[i][k+1][0], ring[i][k+1][1]]]);
-        }
-    }
+    var segments = getTileSegments(ring, max_zoom);
     var tileHash = {};
     var min = [null,Infinity];
     var max = [null,-Infinity];
@@ -115,16 +109,23 @@ function polyRingCover(ring, max_zoom) {
     var maxTile = tilebelt.pointToTile(max[0], max[1], max_zoom);
     var y = maxTile[1];
     while(y <= minTile[1]) {
-        // calculate intersections at each tile top-line
         var intersections = [];
-        var bbox = tilebelt.tileToBBOX([0, y, max_zoom]);
-        var line = [[bbox[0], bbox[3]], 
-                    [bbox[1], bbox[3]]];
         for(var i = 0; i < segments.length; i++) {
-            var intersection = lineIntersects(line[0][0], line[0][1], line[1][0], line[1][1], 
-                segments[i][0][0], segments[i][0][1], segments[i][1][0], segments[i][1][1]);
-            if(intersection[0]) {
-                intersections.push(intersection);
+            var localMin = isLocalMin(i, segments);
+            var localMax = isLocalMax(i, segments);
+            var intersection = lineIntersects(
+                0, y,
+                1, y,
+                segments[i][0][0], segments[i][0][1],
+                segments[i][1][0], segments[i][1][1],
+                localMin || localMax);
+            // Special treatment for horizontal segments.
+            // @TODO get lineIntersects to handle this.
+            if (segments[i][0][1] === y && segments[i][0][1] === segments[i][1][1]) {
+                intersections.push([segments[i][0][0], segments[i][0][1]]);
+                if (!localMin && !localMax) intersections.push([segments[i][1][0], segments[i][1][1]]);
+            } else if (intersection !== false) {
+                intersections.push([Math.round(intersection[0]), Math.round(intersection[1])]);
             }
         }
         // sort intersections by x
@@ -134,10 +135,10 @@ function polyRingCover(ring, max_zoom) {
         // add tiles between intersection pairs
         for(var i = 0; i < intersections.length - 1; i++) {
             if(i % 2 === 0){
-                var enter = tilebelt.pointToTile(intersections[i][0], intersections[i][1], max_zoom);
-                var exit = tilebelt.pointToTile(intersections[i+1][0], intersections[i+1][1], max_zoom);
-                var x = enter[0];
-                while (x <= exit[0]) {
+                var enter = Math.min(intersections[i][0], intersections[i+1][0]);
+                var exit = Math.max(intersections[i][0], intersections[i+1][0]);
+                var x = enter;
+                while (x <= exit) {
                     tileHash[x+'/'+y+'/'+max_zoom] = true;
                     x++;
                 }
@@ -153,8 +154,95 @@ function polyRingCover(ring, max_zoom) {
     return tileHash;
 }
 
+// Convert a set of rings into segments connecting tile coordinates.
+// Drops degenerate segments and merges sequential horizontal segments.
+module.exports.getTileSegments = getTileSegments;
+function getTileSegments(ring, max_zoom) {
+    // construct segments
+    var segments = [];
+    var last = null;
+    var start;
+    var end;
+    for(var i = 0; i < ring.length; i++) {
+        for(var k = 0; k < ring[i].length - 1; k++) {
+            start = tilebelt.pointToTile(ring[i][k][0], ring[i][k][1], max_zoom);
+            end = tilebelt.pointToTile(ring[i][k+1][0], ring[i][k+1][1], max_zoom);
+            // Degenerate segment (start === end). Skip.
+            if (start[0] === end[0] && start[1] === end[1]) {
+                continue;
+            // Horizontal segment that continues previous horizontal segment. Merge.
+            } else if (last && last[0][1] === last[1][1] && last[0][1] === start[1] && last[1][1] === end[1]) {
+                last[1] = end;
+            // Add in new segment.
+            } else {
+                last = [ start, end ];
+                segments.push(last);
+            }
+        }
+        last = null;
+    }
+    return segments;
+}
+
+// Determines if the end y value of segment @ i is a local minima.
+// If the segment is horizontal will continue iterating through next
+// segments until it can be determined if the entire horizontal segment
+// is a local minima.
+//
+// o current                        o current             o
+//  \                                \                   /
+//   \   o next                       x-----------------/
+//    \ /                             ^
+//     x <-------- local minima       +-----local minima
+//
+module.exports.isLocalMin = isLocalMin;
+module.exports.isLocalMax = isLocalMax;
+function isLocalMin(i, segments) {
+    var seek = 1;
+    var current = segments[i];
+    var next = segments[i+seek];
+
+    // Not min in current segment.
+    if (current[1][1] >= current[0][1]) return false;
+
+    while (next && current[1][1] === next[1][1]) {
+        seek++;
+        next = segments[i+seek]
+    }
+
+    // No next segment.
+    if (!next) return false;
+
+    // Not min vs next segment.
+    if (current[1][1] > next[1][1]) return false;
+
+    return current[1][1] < next[1][1];
+}
+
+function isLocalMax(i, segments) {
+    var seek = 1;
+    var current = segments[i];
+    var next = segments[i+seek];
+
+    // Not min in current segment.
+    if (current[1][1] <= current[0][1]) return false;
+
+    while (next && current[1][1] === next[1][1]) {
+        seek++;
+        next = segments[i+seek]
+    }
+
+    // No next segment.
+    if (!next) return false;
+
+    // Not max vs next segment.
+    if (current[1][1] < next[1][1]) return false;
+
+    return current[1][1] > next[1][1];
+}
+
 // modified from http://jsfiddle.net/justin_c_rounds/Gd2S2/light/
-function lineIntersects(line1StartX, line1StartY, line1EndX, line1EndY, line2StartX, line2StartY, line2EndX, line2EndY) {
+function lineIntersects(line1StartX, line1StartY, line1EndX, line1EndY, line2StartX, line2StartY, line2EndX, line2EndY, localMinMax) {
     var denominator,
         a, 
         b,
@@ -184,10 +272,11 @@ function lineIntersects(line1StartX, line1StartY, line1EndX, line1EndY, line2Sta
     res[1] = line1StartY + (a * (line1EndY - line1StartY));
 
     // if line2 is a segment and line1 is infinite, they intersect if:
-    if (b > 0 && b < 1) {
+    if ((b > 0 && b < 1) ||
+        (res[0] === line2StartX && res[1] === line2StartY) ||
+        (localMinMax && res[0] === line2EndX && res[1] === line2EndY)) {
         return res;
-    }
-    else {
+    } else {
         return false;
     }
 }
