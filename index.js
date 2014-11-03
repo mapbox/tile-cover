@@ -285,28 +285,10 @@ function lineCover(coordinates, max_zoom) {
     var tileHash = {};
     // break into segments and calculate bbox
     var segments = [];
-    //var bbox = [coordinates[0][0], coordinates[0][1], coordinates[0][0], coordinates[0][1]];
     for(var i = 0; i < coordinates.length - 1; i++) {
         var iNext = i+1;
         segments.push([[coordinates[i][0], coordinates[i][1]], [coordinates[iNext][0], coordinates[iNext][1]]]);
-        //if(coordinates[iNext][0] < bbox[0]) bbox[0] = coordinates[iNext][0];
-        //if(coordinates[iNext][1] < bbox[1]) bbox[1] = coordinates[iNext][1];
-        //if(coordinates[iNext][0] > bbox[2]) bbox[2] = coordinates[iNext][0];
-        //if(coordinates[iNext][1] > bbox[3]) bbox[3] = coordinates[iNext][1];
     }
-  /*  var bboxTile = tilebelt.bboxToTile(bbox);
-    //console.log(bboxTile)
-    if(bboxTile[2] === max_zoom) {
-        //console.log('\n\nzoom equal: '+bboxTile[2]+' = '+max_zoom+'\n\n')
-        tileHash[x0+'/'+y0+'/'+max_zoom] = true;
-        return tileHash;
-    } else if(bboxTile[2] > max_zoom) {
-        //console.log('\n\nzoom greater: '+bboxTile[2]+' > '+max_zoom+'\n\n')
-        //console.log(bbox)
-        var center = [(((bbox[2] - bbox[0]) / 2) +bbox[0]), (((bbox[3] - bbox[1]) / 2) + bbox[1])];
-        var centerTile = tilebelt.pointToTile(center[0], center[1], max_zoom);
-        tileHash[centerTile[0]+'/'+centerTile[1]+'/'+max_zoom] = true;
-    }*/
 
     for (var i = 0; i < segments.length; i ++) {
         // encode coordinates as tile relative pairs
@@ -339,7 +321,6 @@ function lineCover(coordinates, max_zoom) {
         while(true) {
             tileHash[x0+'/'+y0+'/'+max_zoom] = true;
             if(x0 > x1) throw new Error('Unable to find end of segment');
-            //console.log(x0 +' : '+y0)
             if (x0==x1 && y0==y1) break;
             var e2 = 2*err;
             if (e2 >-dy){ err -= dy; x0 += sx; }
