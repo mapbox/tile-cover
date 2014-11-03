@@ -46,7 +46,7 @@ function getLocked (geom, limits) {
         }
     } else {
         var seed = tilebelt.bboxToTile(extent(geom));
-        if (!seed[3]) seed = [0, 0, 0];
+        if (!seed[2]) seed = [0, 0, 0];
         splitSeek(seed, geom, locked, limits);
         locked = mergeTiles(locked, limits);
     }
