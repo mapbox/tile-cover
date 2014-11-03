@@ -245,10 +245,26 @@ function compareFixture(t, geom, limits, filepath) {
         properties: {name:'original', stroke:'#f44', fill:'#f44'},
         geometry: geom
     });
+    // Sort features to ensure changes such that changes to tile cover
+    // order is not considered significant.
+    result.features.sort(function(a, b) {
+        if (a.properties.name === 'original') return 1;
+        if (b.properties.name === 'original') return -1;
+        return a.geometry.coordinates[0][0] < b.geometry.coordinates[0][0] ? -1 :
+            a.geometry.coordinates[0][0] > b.geometry.coordinates[0][0] ? 1 :
+            a.geometry.coordinates[0][1] < b.geometry.coordinates[0][1] ? -1 :
+            a.geometry.coordinates[0][1] > b.geometry.coordinates[0][1] ? 1 : 0;
+    });
 
-    var expected = JSON.parse(JSON.stringify(JSON.parse(fs.readFileSync(filepath)), roundify, 2));
     if (REGEN) fs.writeFileSync(filepath, JSON.stringify(result, roundify, 2));
-    t.deepEqual(JSON.parse(JSON.stringify(result, roundify, 2)), expected);
+    var expected = JSON.parse(JSON.stringify(JSON.parse(fs.readFileSync(filepath)), roundify, 2));
+
+    // Skip the massive deepEquals diff if feature length is not the same.
+    if (result.features.length !== expected.features.length) {
+        t.equal(result.features.length, expected.features.length);
+    } else {
+        t.deepEqual(JSON.parse(JSON.stringify(result, roundify, 2)), expected);
+    }
 }
 
 function roundify(key, val) {
