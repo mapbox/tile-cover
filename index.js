@@ -1,5 +1,4 @@
-var tilebelt = require('tilebelt'),
-    extent = require('geojson-extent');
+var tilebelt = require('tilebelt');
 
 module.exports.geojson = function (geom, limits) {
     var locked = getLocked(geom, limits);

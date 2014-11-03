@@ -33,8 +33,6 @@
     "turf-merge": "0.0.2"
   },
   "dependencies": {
-    "geojson-extent": "^0.3.0",
-    "tilebelt": "^0.5.2",
-    "turf-inside": "^0.1.4"
+    "tilebelt": "^0.5.2"
   }
 }
