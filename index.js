@@ -93,7 +93,7 @@ function mergeTiles (tiles, limits) {
 }
 
 function polyRingCover(ring, max_zoom) {
-    var segments = getTileSegments(ring, max_zoom);
+    var segments = getSegments(ring);
     var tileHash = {};
     var min = [null,Infinity];
     var max = [null,-Infinity];
@@ -108,23 +108,20 @@ function polyRingCover(ring, max_zoom) {
     var maxTile = tilebelt.pointToTile(max[0], max[1], max_zoom);
     var y = maxTile[1];
     while(y <= minTile[1]) {
+        // calculate intersections at each tile top-line
         var intersections = [];
+        var tileTop = tilebelt.tileToBBOX([0, y, max_zoom])[3];
         for(var i = 0; i < segments.length; i++) {
             var localMin = isLocalMin(i, segments);
             var localMax = isLocalMax(i, segments);
             var intersection = lineIntersects(
-                0, y,
-                1, y,
+                0, tileTop,
+                1, tileTop,
                 segments[i][0][0], segments[i][0][1],
                 segments[i][1][0], segments[i][1][1],
                 localMin || localMax);
-            // Special treatment for horizontal segments.
-            // @TODO get lineIntersects to handle this.
-            if (segments[i][0][1] === y && segments[i][0][1] === segments[i][1][1]) {
-                intersections.push([segments[i][0][0], segments[i][0][1]]);
-                if (!localMin && !localMax) intersections.push([segments[i][1][0], segments[i][1][1]]);
-            } else if (intersection !== false) {
-                intersections.push([Math.round(intersection[0]), Math.round(intersection[1])]);
+            if (intersection !== false) {
+                intersections.push(intersection);
             }
         }
         // sort intersections by x
@@ -134,8 +131,8 @@ function polyRingCover(ring, max_zoom) {
         // add tiles between intersection pairs
         for(var i = 0; i < intersections.length - 1; i++) {
             if(i % 2 === 0){
-                var enter = intersections[i][0];
-                var exit = intersections[i+1][0];
+                var enter = tilebelt.pointToTile(intersections[i][0], intersections[i][1], max_zoom)[0];
+                var exit = tilebelt.pointToTile(intersections[i+1][0], intersections[i+1][1], max_zoom)[0];
                 var x = enter;
                 while (x <= exit) {
                     tileHash[x+'/'+y+'/'+max_zoom] = true;
@@ -153,10 +150,10 @@ function polyRingCover(ring, max_zoom) {
     return tileHash;
 }
 
-// Convert a set of rings into segments connecting tile coordinates.
+// Convert a set of rings into segments connecting coordinates.
 // Drops degenerate segments and merges sequential horizontal segments.
-module.exports.getTileSegments = getTileSegments;
-function getTileSegments(ring, max_zoom) {
+module.exports.getSegments = getSegments;
+function getSegments(ring) {
     // construct segments
     var segments = [];
     var last = null;
@@ -164,8 +161,8 @@ function getTileSegments(ring, max_zoom) {
     var end;
     for(var i = 0; i < ring.length; i++) {
         for(var k = 0; k < ring[i].length - 1; k++) {
-            start = tilebelt.pointToTile(ring[i][k][0], ring[i][k][1], max_zoom);
-            end = tilebelt.pointToTile(ring[i][k+1][0], ring[i][k+1][1], max_zoom);
+            start = ring[i][k];
+            end = ring[i][k+1];
             // Degenerate segment (start === end). Skip.
             if (start[0] === end[0] && start[1] === end[1]) {
                 continue;
