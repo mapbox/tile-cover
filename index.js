@@ -135,8 +135,8 @@ function polyRingCover(ring, max_zoom) {
         // add tiles between intersection pairs
         for(var i = 0; i < intersections.length - 1; i++) {
             if(i % 2 === 0){
-                var enter = Math.min(intersections[i][0], intersections[i+1][0]);
-                var exit = Math.max(intersections[i][0], intersections[i+1][0]);
+                var enter = intersections[i][0];
+                var exit = intersections[i+1][0];
                 var x = enter;
                 while (x <= exit) {
                     tileHash[x+'/'+y+'/'+max_zoom] = true;
