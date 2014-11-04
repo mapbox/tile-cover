@@ -1,6 +1,6 @@
 {
   "name": "tile-cover",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "generate the minimum number of tiles to cover a geojson geometry",
   "main": "index.js",
   "directories": {
