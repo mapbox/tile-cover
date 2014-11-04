@@ -58,7 +58,7 @@ function getLocked (geom, limits) {
         }
         locked = hashToArray(tileHash);
     } else {
-        throw new Error('Geoemtry type not implemented')
+        throw new Error('Geoemtry type not implemented');
     }
     if(limits.min_zoom !== limits.max_zoom){
         locked = mergeTiles(locked, limits);
@@ -203,7 +203,7 @@ function isLocalMin(i, segments) {
 
     while (next && current[1][1] === next[1][1]) {
         seek++;
-        next = segments[i+seek]
+        next = segments[i+seek];
     }
 
     // No next segment.
@@ -225,7 +225,7 @@ function isLocalMax(i, segments) {
 
     while (next && current[1][1] === next[1][1]) {
         seek++;
-        next = segments[i+seek]
+        next = segments[i+seek];
     }
 
     // No next segment.
@@ -238,6 +238,7 @@ function isLocalMax(i, segments) {
 }
 
 // modified from http://jsfiddle.net/justin_c_rounds/Gd2S2/light/
+// line1 is an infinite line, and line2 is a finite segment
 function lineIntersects(line1StartX, line1StartY, line1EndX, line1EndY, line2StartX, line2StartY, line2EndX, line2EndY, localMinMax) {
     var denominator,
         a, 
@@ -283,14 +284,15 @@ function lineCover(coordinates, max_zoom) {
     var segments = [];
     for(var i = 0; i < coordinates.length - 1; i++) {
         var iNext = i+1;
-        segments.push([[coordinates[i][0], coordinates[i][1]], [coordinates[iNext][0], coordinates[iNext][1]]]);
+        // add endpoint tiles in case line is contained withing a single tile
+        tileHash[tilebelt.pointToTile(coordinates[i][0], coordinates[i][1], max_zoom).join('/')] = true;
+        tileHash[tilebelt.pointToTile(coordinates[iNext][0], coordinates[iNext][1], max_zoom).join('/')] = true;
+        // encode segments as tile fractions
+        var start = pointToTileFraction(coordinates[i][0], coordinates[i][1], max_zoom);
+        var stop = pointToTileFraction(coordinates[iNext][0], coordinates[iNext][1], max_zoom);
+        segments.push([[start[0], start[1]], [stop[0], stop[1]]]);
     }
-
-    for (var i = 0; i < segments.length; i ++) {
-        // encode coordinates as tile relative pairs
-        segments[i][0] = pointToTileFraction(segments[i][0][0], segments[i][0][1], max_zoom);
-        segments[i][1] = pointToTileFraction(segments[i][1][0], segments[i][1][1], max_zoom);       
-        // modified Bresenham digital differential analyzer algorithm
+    for (var i = 0; i < segments.length; i++) {  
         var x0 = segments[i][0][0];
             y0 = segments[i][0][1];
             x1 = segments[i][1][0];
@@ -304,23 +306,64 @@ function lineCover(coordinates, max_zoom) {
             x1 = firstX;
             y1 = firstY;
         }
-        x0 = Math.floor(x0);
-        y0 = Math.floor(y0);
-        x1 = Math.floor(x1);
-        y1 = Math.floor(y1);
-        var dx = Math.abs(x1-x0);
-        var dy = Math.abs(y1-y0);
-        var sx = (x0 < x1) ? 1 : -1;
-        var sy = (y0 < y1) ? 1 : -1;
-        var err = dx - dy;
+        var x0Floor = Math.floor(x0);
+        var y0Floor = Math.floor(y0);
+        var x1Floor = Math.floor(x1);
+        var y1Floor = Math.floor(y1);
+        /*
+        vertical intersects:   
 
-        while(true) {
-            tileHash[x0+'/'+y0+'/'+max_zoom] = true;
-            if(x0 > x1) throw new Error('Unable to find end of segment');
-            if (x0==x1 && y0==y1) break;
-            var e2 = 2*err;
-            if (e2 >-dy){ err -= dy; x0 += sx; }
-            else if (e2 < dx){ err += dx; y0 += sy; }
+        |  |  |  |
+        |  |  |  |
+        |  |  |  |
+
+        */
+        var x = 0;
+        while(x0+x <= x1Floor+1) {
+            var intersection = lineIntersects(Math.floor(x0+x), y0-10000, Math.floor(x0+x), y0+10000, 
+                                              x0, y0, x1, y1);
+
+            // add tile to the left and right of the intersection
+            //todo: check intersect and the two tiles being hashed
+            if(intersection){
+                tileHash[Math.floor(intersection[0]-1)+'/'+Math.floor(intersection[1])+'/'+max_zoom] = true;
+                tileHash[Math.floor(intersection[0])+'/'+Math.floor(intersection[1])+'/'+max_zoom] = true;
+            }
+            x++;
+        }
+
+        /*
+        horizontal intersects
+
+        ________
+        ________
+        ________
+
+        */
+        // verify x0,y0 is top
+        if(y0 < y1) {
+            var firstX = x0;
+            var firstY = y0;
+            x0 = x1;
+            y0 = y1;
+            x1 = firstX;
+            y1 = firstY;
+        }
+        var x0Floor = Math.floor(x0);
+        var y0Floor = Math.floor(y0);
+        var x1Floor = Math.floor(x1);
+        var y1Floor = Math.floor(y1);
+        var y = 0;
+        while(y0+y >= y1Floor) {
+            var intersection = lineIntersects(x0-1000, Math.floor(y0+y), x0+1000, Math.floor(y0+y), 
+                                              x0, y0, x1, y1);
+
+            // add tile above and below the intersection
+            if(intersection){
+                tileHash[Math.floor(intersection[0])+'/'+Math.floor(intersection[1])+'/'+max_zoom] = true;
+                tileHash[Math.floor(intersection[0])+'/'+Math.floor(intersection[1]-1)+'/'+max_zoom] = true;
+            }
+            y--;
         }
     }
     return tileHash;
@@ -344,7 +387,7 @@ function pointToTileFraction (lon, lat, z) {
 }
 
 function hashMerge(hash1, hash2) {
-    var keys = Object.keys(hash2)
+    var keys = Object.keys(hash2);
     for(var i = 0; i < keys.length; i++) {
         hash1[keys[i]] = true;
     }
@@ -353,7 +396,7 @@ function hashMerge(hash1, hash2) {
 
 function hashToArray(hash) {
     keys = Object.keys(hash);
-    var tiles = []
+    var tiles = [];
     for(var i = 0; i < keys.length; i++) {
         var tileStrings = keys[i].split('/');
         tiles.push([parseInt(tileStrings[0]), parseInt(tileStrings[1]), parseInt(tileStrings[2])]);
