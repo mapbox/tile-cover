@@ -1,11 +1,7 @@
-var tilebelt = require('tilebelt'),
-    extent = require('geojson-extent'),
-    bboxIntersects = require('bbox-intersect'),
-    intersect = require('turf-intersect');
+var tilebelt = require('tilebelt');
 
 module.exports.geojson = function (geom, limits) {
     var locked = getLocked(geom, limits);
-
     var tileFeatures = locked.map(function (t) {
         return tilebelt.tileToGeoJSON(t);
     });
@@ -17,13 +13,11 @@ module.exports.geojson = function (geom, limits) {
 
 module.exports.tiles = function (geom, limits) {
     var locked = getLocked(geom, limits);
-
     return locked;
 };
 
 module.exports.indexes = function (geom, limits) {
     var locked = getLocked(geom, limits);
-
     return locked.map(function (tile) {
         return tilebelt.tileToQuadkey(tile);
     });
@@ -31,7 +25,6 @@ module.exports.indexes = function (geom, limits) {
 
 function getLocked (geom, limits) {
     var locked = [];
-
     if (geom.type === 'Point') {
         locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
     } else if (geom.type === 'MultiPoint') {
@@ -44,13 +37,32 @@ function getLocked (geom, limits) {
                 locked.push(tile);
             }
         }
+    } else if (geom.type === 'LineString') {
+        locked = hashToArray(lineCover(geom.coordinates, limits.max_zoom));
+    } else if (geom.type === 'MultiLineString') {
+        var tileHash = {};
+        for(var i = 0; i < geom.coordinates.length; i++) {
+            tileHash = hashMerge(tileHash, lineCover(geom.coordinates[i], limits.max_zoom));
+        }
+        locked = hashToArray(tileHash);
+    } else if (geom.type === 'Polygon') {
+        var tileHash = polyRingCover(geom.coordinates, limits.max_zoom);
+        locked = hashToArray(tileHash);
+    } else if (geom.type === 'MultiPolygon') {
+        var tileHash = {};
+        for(var i = 0; i < geom.coordinates.length; i++) {
+            var polyHash = Object.keys(polyRingCover(geom.coordinates[i], limits.max_zoom));
+            for(var k = 0; k < polyHash.length; k++) {
+                tileHash[polyHash[k]] = true;
+            }
+        }
+        locked = hashToArray(tileHash);
     } else {
-        var seed = tilebelt.bboxToTile(extent(geom));
-        if (!seed[2]) seed = [0, 0, 0];
-        splitSeek(seed, geom, locked, limits);
+        throw new Error('Geoemtry type not implemented');
+    }
+    if(limits.min_zoom !== limits.max_zoom){
         locked = mergeTiles(locked, limits);
     }
-
     return locked;
 }
 
@@ -80,30 +92,316 @@ function mergeTiles (tiles, limits) {
     }
 }
 
-function splitSeek (tile, geom, locked, limits) {
-    var tileCovers = true;
-    var doIntersect = needsIntersect(tilebelt.tileToGeoJSON(tile), geom);
-    var intersects;
-    if (doIntersect) {
-        try {
-            intersects = intersect(fc(tilebelt.tileToGeoJSON(tile)), fc(feature(geom)));
-        }
-        catch(err) {
-            throw new Error(err.message);
+function polyRingCover(ring, max_zoom) {
+    var segments = getSegments(ring);
+    var tileHash = {};
+    var min = [null,Infinity];
+    var max = [null,-Infinity];
+    for(var i = 0; i < ring[0].length; i++) { 
+        if(ring[0][i][1] < min[1]) {
+            min = ring[0][i];
+        } else if (ring[0][i][1] > max[1]) {
+            max = ring[0][i];
         }
     }
-    if (!intersects || intersects.features[0].type === 'GeometryCollection') {
-        tileCovers = false;
+    var minTile = tilebelt.pointToTile(min[0], min[1], max_zoom);
+    var maxTile = tilebelt.pointToTile(max[0], max[1], max_zoom);
+    var y = maxTile[1];
+    while(y <= minTile[1]) {
+        // calculate intersections at each tile top-line
+        var intersections = [];
+        var tileTop = tilebelt.tileToBBOX([0, y, max_zoom])[3];
+        for(var i = 0; i < segments.length; i++) {
+            var localMin = isLocalMin(i, segments);
+            var localMax = isLocalMax(i, segments);
+            var intersection = lineIntersects(
+                0, tileTop,
+                1, tileTop,
+                segments[i][0][0], segments[i][0][1],
+                segments[i][1][0], segments[i][1][1],
+                localMin || localMax);
+            if (intersection !== false) {
+                intersections.push(intersection);
+            }
+        }
+        // sort intersections by x
+        intersections = intersections.sort(function(a, b) {
+            return a[0] - b[0];
+        });
+        // add tiles between intersection pairs
+        for(var i = 0; i < intersections.length - 1; i++) {
+            if(i % 2 === 0){
+                var enter = tilebelt.pointToTile(intersections[i][0], intersections[i][1], max_zoom)[0];
+                var exit = tilebelt.pointToTile(intersections[i+1][0], intersections[i+1][1], max_zoom)[0];
+                var x = enter;
+                while (x <= exit) {
+                    tileHash[x+'/'+y+'/'+max_zoom] = true;
+                    x++;
+                }
+            }
+        }
+        y++;
+    }
+    // add any missing tiles with a segments pass
+    for(var i = 0; i < ring.length; i++) {
+        tileHash = hashMerge(tileHash, lineCover(ring[i], max_zoom));
+    }
+    
+    return tileHash;
+}
+
+// Convert a set of rings into segments connecting coordinates.
+// Drops degenerate segments and merges sequential horizontal segments.
+module.exports.getSegments = getSegments;
+function getSegments(ring) {
+    // construct segments
+    var segments = [];
+    var last = null;
+    var start;
+    var end;
+    for(var i = 0; i < ring.length; i++) {
+        for(var k = 0; k < ring[i].length - 1; k++) {
+            start = ring[i][k];
+            end = ring[i][k+1];
+            // Degenerate segment (start === end). Skip.
+            if (start[0] === end[0] && start[1] === end[1]) {
+                continue;
+            // Horizontal segment that continues previous horizontal segment. Merge.
+            } else if (last && last[0][1] === last[1][1] && last[0][1] === start[1] && last[1][1] === end[1]) {
+                last[1] = end;
+            // Add in new segment.
+            } else {
+                last = [ start, end ];
+                segments.push(last);
+            }
+        }
+        last = null;
+    }
+    return segments;
+}
+
+// Determines if the end y value of segment @ i is a local minima.
+// If the segment is horizontal will continue iterating through next
+// segments until it can be determined if the entire horizontal segment
+// is a local minima.
+//
+// o current                        o current             o
+//  \                                \                   /
+//   \   o next                       x-----------------/
+//    \ /                             ^
+//     x <-------- local minima       +-----local minima
+//
+module.exports.isLocalMin = isLocalMin;
+module.exports.isLocalMax = isLocalMax;
+function isLocalMin(i, segments) {
+    var seek = 1;
+    var current = segments[i];
+    var next = segments[i+seek];
+
+    // Not min in current segment.
+    if (current[1][1] >= current[0][1]) return false;
+
+    while (next && current[1][1] === next[1][1]) {
+        seek++;
+        next = segments[i+seek];
     }
 
-    if (tile[2] === 0 || (tileCovers && tile[2] < limits.max_zoom)) {
-        var children = tilebelt.getChildren(tile);
-        children.forEach(function (t) {
-            splitSeek(t, intersects.features[0], locked, limits);
-        });
-    } else if (tileCovers) {
-        locked.push(tile);
+    // No next segment.
+    if (!next) return false;
+
+    // Not min vs next segment.
+    if (current[1][1] > next[1][1]) return false;
+
+    return current[1][1] < next[1][1];
+}
+
+function isLocalMax(i, segments) {
+    var seek = 1;
+    var current = segments[i];
+    var next = segments[i+seek];
+
+    // Not min in current segment.
+    if (current[1][1] <= current[0][1]) return false;
+
+    while (next && current[1][1] === next[1][1]) {
+        seek++;
+        next = segments[i+seek];
     }
+
+    // No next segment.
+    if (!next) return false;
+
+    // Not max vs next segment.
+    if (current[1][1] < next[1][1]) return false;
+
+    return current[1][1] > next[1][1];
+}
+
+// modified from http://jsfiddle.net/justin_c_rounds/Gd2S2/light/
+// line1 is an infinite line, and line2 is a finite segment
+function lineIntersects(line1StartX, line1StartY, line1EndX, line1EndY, line2StartX, line2StartY, line2EndX, line2EndY, localMinMax) {
+    var denominator,
+        a, 
+        b,
+        numerator1,
+        numerator2,
+        onLine1= false,
+        onLine2= false,
+        res = [null, null];
+
+    denominator = ((line2EndY - line2StartY) * (line1EndX - line1StartX)) - ((line2EndX - line2StartX) * (line1EndY - line1StartY));
+    if (denominator === 0) {
+        if(res[0] !== null && res[1] !== null) {
+            return res;
+        } else {
+            return false;
+        }
+    }
+    a = line1StartY - line2StartY;
+    b = line1StartX - line2StartX;
+    numerator1 = ((line2EndX - line2StartX) * a) - ((line2EndY - line2StartY) * b);
+    numerator2 = ((line1EndX - line1StartX) * a) - ((line1EndY - line1StartY) * b);
+    a = numerator1 / denominator;
+    b = numerator2 / denominator;
+
+    // if we cast these lines infinitely in both directions, they intersect here:
+    res[0] = line1StartX + (a * (line1EndX - line1StartX));
+    res[1] = line1StartY + (a * (line1EndY - line1StartY));
+
+    // if line2 is a segment and line1 is infinite, they intersect if:
+    if ((b > 0 && b < 1) ||
+        (res[0] === line2StartX && res[1] === line2StartY) ||
+        (localMinMax && res[0] === line2EndX && res[1] === line2EndY)) {
+        return res;
+    } else {
+        return false;
+    }
+}
+
+function lineCover(coordinates, max_zoom) {
+    var tileHash = {};
+    // break into segments and calculate bbox
+    var segments = [];
+    for(var i = 0; i < coordinates.length - 1; i++) {
+        var iNext = i+1;
+        // add endpoint tiles in case line is contained withing a single tile
+        tileHash[tilebelt.pointToTile(coordinates[i][0], coordinates[i][1], max_zoom).join('/')] = true;
+        tileHash[tilebelt.pointToTile(coordinates[iNext][0], coordinates[iNext][1], max_zoom).join('/')] = true;
+        // encode segments as tile fractions
+        var start = pointToTileFraction(coordinates[i][0], coordinates[i][1], max_zoom);
+        var stop = pointToTileFraction(coordinates[iNext][0], coordinates[iNext][1], max_zoom);
+        segments.push([[start[0], start[1]], [stop[0], stop[1]]]);
+    }
+    for (var i = 0; i < segments.length; i++) {  
+        var x0 = segments[i][0][0];
+            y0 = segments[i][0][1];
+            x1 = segments[i][1][0];
+            y1 = segments[i][1][1];
+        // verify x0,y0 is far left
+        if(x0 > x1) {
+            var firstX = x0;
+            var firstY = y0;
+            x0 = x1;
+            y0 = y1;
+            x1 = firstX;
+            y1 = firstY;
+        }
+        var x0Floor = Math.floor(x0);
+        var y0Floor = Math.floor(y0);
+        var x1Floor = Math.floor(x1);
+        var y1Floor = Math.floor(y1);
+        /*
+        vertical intersects:   
+
+        |  |  |  |
+        |  |  |  |
+        |  |  |  |
+
+        */
+        var x = 0;
+        while(x0+x <= x1Floor+1) {
+            var intersection = lineIntersects(Math.floor(x0+x), y0-10000, Math.floor(x0+x), y0+10000, 
+                                              x0, y0, x1, y1);
+
+            // add tile to the left and right of the intersection
+            //todo: check intersect and the two tiles being hashed
+            if(intersection){
+                tileHash[Math.floor(intersection[0]-1)+'/'+Math.floor(intersection[1])+'/'+max_zoom] = true;
+                tileHash[Math.floor(intersection[0])+'/'+Math.floor(intersection[1])+'/'+max_zoom] = true;
+            }
+            x++;
+        }
+
+        /*
+        horizontal intersects
+
+        ________
+        ________
+        ________
+
+        */
+        // verify x0,y0 is top
+        if(y0 < y1) {
+            var firstX = x0;
+            var firstY = y0;
+            x0 = x1;
+            y0 = y1;
+            x1 = firstX;
+            y1 = firstY;
+        }
+        var x0Floor = Math.floor(x0);
+        var y0Floor = Math.floor(y0);
+        var x1Floor = Math.floor(x1);
+        var y1Floor = Math.floor(y1);
+        var y = 0;
+        while(y0+y >= y1Floor) {
+            var intersection = lineIntersects(x0-1000, Math.floor(y0+y), x0+1000, Math.floor(y0+y), 
+                                              x0, y0, x1, y1);
+
+            // add tile above and below the intersection
+            if(intersection){
+                tileHash[Math.floor(intersection[0])+'/'+Math.floor(intersection[1])+'/'+max_zoom] = true;
+                tileHash[Math.floor(intersection[0])+'/'+Math.floor(intersection[1]-1)+'/'+max_zoom] = true;
+            }
+            y--;
+        }
+    }
+    return tileHash;
+}
+
+function pointToTileFraction (lon, lat, z) {
+    var tile = tilebelt.pointToTile(lon, lat, z);
+    var bbox = tilebelt.tileToBBOX(tile);
+    var tileNW = [bbox[0], bbox[3]];
+    var tileSE = [bbox[2], bbox[1]];
+
+    var xTileOffset = tileSE[0] - tileNW[0];
+    var xPointOffset = lon - tileNW[0];
+    var xPercentOffset = xPointOffset / xTileOffset;
+
+    var yTileOffset = tileSE[1] - tileNW[1];
+    var yPointOffset = lat - tileNW[1];
+    var yPercentOffset = yPointOffset / yTileOffset;
+
+    return [tile[0]+xPercentOffset, tile[1]+yPercentOffset];
+}
+
+function hashMerge(hash1, hash2) {
+    var keys = Object.keys(hash2);
+    for(var i = 0; i < keys.length; i++) {
+        hash1[keys[i]] = true;
+    }
+    return hash1;
+}
+
+function hashToArray(hash) {
+    keys = Object.keys(hash);
+    var tiles = [];
+    for(var i = 0; i < keys.length; i++) {
+        var tileStrings = keys[i].split('/');
+        tiles.push([parseInt(tileStrings[0]), parseInt(tileStrings[1]), parseInt(tileStrings[2])]);
+    }
+    return tiles;
 }
 
 function feature (geom) {
@@ -119,10 +417,4 @@ function fc (feat) {
         type: 'FeatureCollection',
         features: [feat]
     };
-}
-
-function needsIntersect (tile, geom) {
-    var bboxGeom = extent(geom);
-    var bboxTile = extent(tile);
-    return bboxIntersects(bboxGeom, bboxTile);
 }

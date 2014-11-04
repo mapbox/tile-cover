@@ -168,7 +168,7 @@ test('russia', function(t){
     t.ok(cover.geojson(russia, limits), 'russia geojson');
     t.ok(cover.tiles(russia, limits).length, 'russia tiles');
     t.ok(cover.indexes(russia, limits).length, 'russia indexes');
-    t.equal(cover.indexes(russia, limits).length, 254);
+    t.equal(cover.indexes(russia, limits).length, 259);
     compareFixture(t, russia, limits, __dirname+'/fixtures/russia_out.geojson');
     t.end();
 });
@@ -215,18 +215,46 @@ test('invalid polygon --- hourglass', function(t) {
 });
 
 test('high zoom', function(t){
-    var building = {"properties":{"osm_id":0},"geometry":{"type":"Polygon","coordinates":[[[-77.04474940896034,38.90019399459534],[-77.04473063349724,38.90019399459534],[-77.04473063349724,38.90027122854152],[-77.04474672675133,38.900273315944304],[-77.04474672675133,38.900457007149065],[-77.04394474625587,38.90017520794709],[-77.04394206404686,38.900173120541425],[-77.04384550452232,38.9001710331357],[-77.04384550452232,38.900141809449025],[-77.04365238547325,38.90007501240577],[-77.04365238547325,38.89989340762676],[-77.04371139407158,38.899916369176196],[-77.04371139407158,38.89986209641103],[-77.04369261860847,38.89986209641103],[-77.04369261860847,38.89969927786663],[-77.04452946782112,38.89969719044697],[-77.04460456967354,38.89967214140626],[-77.04460725188255,38.89969510302724],[-77.04474672675133,38.89969719044697],[-77.04474940896034,38.90019399459534],[-77.04474940896034,38.90019399459534],[-77.04474940896034,38.90019399459534]]]},"type":"Feature"}
-    building = building.geometry
+    var building = {"properties":{"osm_id":0},"geometry":{"type":"Polygon","coordinates":[[[-77.04474940896034,38.90019399459534],[-77.04473063349724,38.90019399459534],[-77.04473063349724,38.90027122854152],[-77.04474672675133,38.900273315944304],[-77.04474672675133,38.900457007149065],[-77.04394474625587,38.90017520794709],[-77.04394206404686,38.900173120541425],[-77.04384550452232,38.9001710331357],[-77.04384550452232,38.900141809449025],[-77.04365238547325,38.90007501240577],[-77.04365238547325,38.89989340762676],[-77.04371139407158,38.899916369176196],[-77.04371139407158,38.89986209641103],[-77.04369261860847,38.89986209641103],[-77.04369261860847,38.89969927786663],[-77.04452946782112,38.89969719044697],[-77.04460456967354,38.89967214140626],[-77.04460725188255,38.89969510302724],[-77.04474672675133,38.89969719044697],[-77.04474940896034,38.90019399459534],[-77.04474940896034,38.90019399459534],[-77.04474940896034,38.90019399459534]]]},"type":"Feature"};
+    building = building.geometry;
 
     var limits = {
-        min_zoom: 25,
-        max_zoom: 25
+        min_zoom: 23,
+        max_zoom: 23
     };
 
     t.ok(cover.geojson(building, limits), 'building geojson');
     t.ok(cover.tiles(building, limits).length, 'building tiles');
     t.ok(cover.indexes(building, limits).length, 'building indexes');
     compareFixture(t, building, limits, __dirname+'/fixtures/highzoom_out.geojson');
+    t.end();
+});
+
+test('small polygon', function(t){
+    var building = JSON.parse(fs.readFileSync(__dirname+'/fixtures/small_poly.geojson'));
+    var limits = {
+        min_zoom: 10,
+        max_zoom: 10
+    };
+
+    t.ok(cover.geojson(building, limits), 'small_poly geojson');
+    t.ok(cover.tiles(building, limits).length, 'small_poly tiles');
+    t.ok(cover.indexes(building, limits).length, 'small_poly indexes');
+    compareFixture(t, building, limits, __dirname+'/fixtures/small_poly_out.geojson');
+    t.end();
+});
+
+test('spiked polygon', function(t){
+    var spiked = JSON.parse(fs.readFileSync(__dirname+'/fixtures/spiked.geojson'));
+    var limits = {
+        min_zoom: 10,
+        max_zoom: 10
+    };
+
+    t.ok(cover.geojson(spiked, limits), 'spiked geojson');
+    t.ok(cover.tiles(spiked, limits).length, 'spiked tiles');
+    t.ok(cover.indexes(spiked, limits).length, 'spiked indexes');
+    compareFixture(t, spiked, limits, __dirname+'/fixtures/spiked_out.geojson');
     t.end();
 });
 
