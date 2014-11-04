@@ -144,6 +144,20 @@ test('building', function(t){
     t.end();
 });
 
+test('donut', function(t){
+    var fixture = JSON.parse(fs.readFileSync(__dirname+'/fixtures/donut.geojson'));
+    var limits = {
+        min_zoom: 16,
+        max_zoom: 16
+    };
+
+    t.ok(cover.geojson(fixture, limits), 'donut geojson');
+    t.ok(cover.tiles(fixture, limits).length, 'donut tiles');
+    t.ok(cover.indexes(fixture, limits).length, 'donut indexes');
+    compareFixture(t, fixture, limits, __dirname+'/fixtures/donut_out.geojson');
+    t.end();
+});
+
 test('russia', function(t){
     var russia = JSON.parse(fs.readFileSync(__dirname+'/fixtures/russia.geojson'));
     var limits = {
