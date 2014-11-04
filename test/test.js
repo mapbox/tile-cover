@@ -47,7 +47,7 @@ test('line', function(t){
 });
 
 test('edgeline', function(t){
-    var line = JSON.parse(fs.readFileSync(__dirname+'/fixtures/edgemultiline.geojson'));
+    var line = JSON.parse(fs.readFileSync(__dirname+'/fixtures/edgeline.geojson'));
     var limits = {
         min_zoom: 14,
         max_zoom: 14
@@ -56,7 +56,7 @@ test('edgeline', function(t){
     t.ok(cover.geojson(line.geometry, limits), 'edgeline geojson');
     t.deepEqual(cover.tiles(line.geometry, limits), [ [ 4543, 6612, 14 ], [ 4544, 6612, 14 ] ], 'edgeline tiles');
     t.deepEqual(cover.indexes(line.geometry, limits).length, 2, 'edgeline indexes');
-    fs.writeFileSync(__dirname+'/fixtures/edgeline_out.geojson', JSON.stringify(cover.geojson(line.geometry, limits)));
+    compareFixture(t, line.geometry, limits, __dirname+'/fixtures/edgeline_out.geojson');
     t.end();
 });
 
