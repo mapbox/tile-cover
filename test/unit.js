@@ -3,30 +3,30 @@ var tape = require('tape');
 var fs = require('fs');
 
 tape('getTileSegments', function(assert) {
-    assert.deepEqual(cover.getTileSegments([[
+    assert.deepEqual(cover.getSegments([[
         [-40, 40],
         [40, 40],
         [40, -40]
-    ]], 1), [
-        [[0, 0, 1], [1, 0, 1]],
-        [[1, 0, 1], [1, 1, 1]]
+    ]]), [
+        [[-40, 40], [40, 40]],
+        [[40, 40], [40, -40]]
     ], 'Generates segments');
-    assert.deepEqual(cover.getTileSegments([[
+    assert.deepEqual(cover.getSegments([[
         [-40, 40],
         [40, 40],
-        [40, 20],
+        [40, 40],
         [40, -40]
-    ]], 1), [
-        [[0, 0, 1], [1, 0, 1]],
-        [[1, 0, 1], [1, 1, 1]]
+    ]]), [
+        [[-40, 40], [40, 40]],
+        [[40, 40], [40, -40]]
     ], 'Drops degenerate segment');
-    assert.deepEqual(cover.getTileSegments([[
+    assert.deepEqual(cover.getSegments([[
         [-180, 40],
         [-60, 40],
         [-20, 40],
         [20, 40]
-    ]], 2), [
-        [[0, 1, 2], [2, 1, 2]]
+    ]]), [
+        [[-180, 40], [20, 40]]
     ], 'Merges horizontal');
     assert.end();
 });
