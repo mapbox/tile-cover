@@ -2,7 +2,7 @@ var cover = require('../'),
     test = require('tape'),
     fs = require('fs');
 
-var REGEN = true;
+var REGEN = process.env.REGEN;
 
 test('point', function(t){
     var point = {
