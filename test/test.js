@@ -258,6 +258,20 @@ test('spiked polygon', function(t){
     t.end();
 });
 
+test('blocky polygon', function(t){
+    var blocky = JSON.parse(fs.readFileSync(__dirname+'/fixtures/blocky.geojson'));
+    var limits = {
+        min_zoom: 6,
+        max_zoom: 6
+    };
+
+    t.ok(cover.geojson(blocky, limits), 'blocky geojson');
+    t.ok(cover.tiles(blocky, limits).length, 'blocky tiles');
+    t.equal(cover.indexes(blocky, limits).length, 31, 'blocky indexes');
+    compareFixture(t, blocky, limits, __dirname+'/fixtures/blocky_out.geojson');
+    t.end();
+});
+
 function f(g, name){
     return {
         type:'Feature',
