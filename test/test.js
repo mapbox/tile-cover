@@ -2,7 +2,7 @@ var cover = require('../'),
     test = require('tape'),
     fs = require('fs');
 
-var REGEN = process.env.REGEN;
+var REGEN = true;
 
 test('point', function(t){
     var point = {
@@ -255,6 +255,20 @@ test('spiked polygon', function(t){
     t.ok(cover.tiles(spiked, limits).length, 'spiked tiles');
     t.ok(cover.indexes(spiked, limits).length, 'spiked indexes');
     compareFixture(t, spiked, limits, __dirname+'/fixtures/spiked_out.geojson');
+    t.end();
+});
+
+test('blocky polygon', function(t){
+    var blocky = JSON.parse(fs.readFileSync(__dirname+'/fixtures/blocky.geojson'));
+    var limits = {
+        min_zoom: 6,
+        max_zoom: 6
+    };
+
+    t.ok(cover.geojson(blocky, limits), 'blocky geojson');
+    t.ok(cover.tiles(blocky, limits).length, 'blocky tiles');
+    t.equal(cover.indexes(blocky, limits).length, 31, 'blocky indexes');
+    compareFixture(t, blocky, limits, __dirname+'/fixtures/blocky_out.geojson');
     t.end();
 });
 
