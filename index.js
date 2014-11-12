@@ -139,7 +139,7 @@ function polyRingCover(ring, max_zoom) {
                 var exit = intersections[i+1][0];
                 var x = enter;
                 while (x <= exit) {
-                    tileHash[x+'/'+y+'/'+max_zoom] = true;
+                    tileHash[toID(x, y, max_zoom)] = true;
                     x++;
                 }
             }
@@ -289,8 +289,8 @@ function lineCover(coordinates, max_zoom) {
     for(var i = 0; i < coordinates.length - 1; i++) {
         var iNext = i+1;
         // add endpoint tiles in case line is contained withing a single tile
-        tileHash[tilebelt.pointToTile(coordinates[i][0], coordinates[i][1], max_zoom).join('/')] = true;
-        tileHash[tilebelt.pointToTile(coordinates[iNext][0], coordinates[iNext][1], max_zoom).join('/')] = true;
+        tileHash[toID.apply(null, tilebelt.pointToTile(coordinates[i][0], coordinates[i][1], max_zoom))] = true;
+        tileHash[toID.apply(null, tilebelt.pointToTile(coordinates[iNext][0], coordinates[iNext][1], max_zoom))] = true;
         // encode segments as tile fractions
         var start = pointToTileFraction(coordinates[i][0], coordinates[i][1], max_zoom);
         var stop = pointToTileFraction(coordinates[iNext][0], coordinates[iNext][1], max_zoom);
@@ -330,8 +330,8 @@ function lineCover(coordinates, max_zoom) {
             // add tile to the left and right of the intersection
             //todo: check intersect and the two tiles being hashed
             if(intersection){
-                tileHash[Math.floor(intersection[0]-1)+'/'+Math.floor(intersection[1])+'/'+max_zoom] = true;
-                tileHash[Math.floor(intersection[0])+'/'+Math.floor(intersection[1])+'/'+max_zoom] = true;
+                tileHash[toID(Math.floor(intersection[0]-1), Math.floor(intersection[1]), max_zoom)] = true;
+                tileHash[toID(Math.floor(intersection[0]), Math.floor(intersection[1]), max_zoom)] = true;
             }
             x++;
         }
@@ -364,8 +364,8 @@ function lineCover(coordinates, max_zoom) {
 
             // add tile above and below the intersection
             if(intersection){
-                tileHash[Math.floor(intersection[0])+'/'+Math.floor(intersection[1])+'/'+max_zoom] = true;
-                tileHash[Math.floor(intersection[0])+'/'+Math.floor(intersection[1]-1)+'/'+max_zoom] = true;
+                tileHash[toID(Math.floor(intersection[0]), Math.floor(intersection[1]), max_zoom)] = true;
+                tileHash[toID(Math.floor(intersection[0]), Math.floor(intersection[1]-1), max_zoom)] = true;
             }
             y--;
         }
@@ -402,8 +402,7 @@ function hashToArray(hash) {
     keys = Object.keys(hash);
     var tiles = [];
     for(var i = 0; i < keys.length; i++) {
-        var tileStrings = keys[i].split('/');
-        tiles.push([parseInt(tileStrings[0]), parseInt(tileStrings[1]), parseInt(tileStrings[2])]);
+        tiles.push(fromID(keys[i]));
     }
     return tiles;
 }
@@ -421,4 +420,18 @@ function fc (feat) {
         type: 'FeatureCollection',
         features: [feat]
     };
+}
+
+function toID(x, y, z) {
+    var dim = 2 * (1 << z);
+    return ((dim * y + x) * 32) + z;
+}
+
+function fromID(id) {
+    var z = id % 32,
+        dim = 2 * (1 << z),
+        xy = ((id - z) / 32),
+        x = xy % dim,
+        y = ((xy - x) / dim) % dim;
+    return [x, y, z];
 }
