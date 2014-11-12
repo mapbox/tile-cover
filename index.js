@@ -376,15 +376,13 @@ function lineCover(coordinates, max_zoom) {
 function pointToTileFraction (lon, lat, z) {
     var tile = tilebelt.pointToTile(lon, lat, z);
     var bbox = tilebelt.tileToBBOX(tile);
-    var tileNW = [bbox[0], bbox[3]];
-    var tileSE = [bbox[2], bbox[1]];
 
-    var xTileOffset = tileSE[0] - tileNW[0];
-    var xPointOffset = lon - tileNW[0];
+    var xTileOffset = bbox[2] - bbox[0];
+    var xPointOffset = lon - bbox[0];
     var xPercentOffset = xPointOffset / xTileOffset;
 
-    var yTileOffset = tileSE[1] - tileNW[1];
-    var yPointOffset = lat - tileNW[1];
+    var yTileOffset = bbox[1] - bbox[3];
+    var yPointOffset = lat - bbox[3];
     var yPercentOffset = yPointOffset / yTileOffset;
 
     return [tile[0]+xPercentOffset, tile[1]+yPercentOffset];
