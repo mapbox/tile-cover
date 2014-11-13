@@ -96,7 +96,9 @@ function mergeTiles(tileHash, limits) {
                     tileHash[id2] = false;
                     tileHash[id3] = false;
                     tileHash[id4] = false;
-                    parentTileHash[toID(t[0] / 2, t[1] / 2, z - 1)] = true;
+
+                    var parentId = toID(t[0] / 2, t[1] / 2, z - 1);
+                    (z - 1 === limits.min_zoom ? mergedTileHash : parentTileHash)[parentId] = true;
                 }
             }
         }
@@ -108,14 +110,6 @@ function mergeTiles(tileHash, limits) {
         }
 
         tileHash = parentTileHash;
-    }
-
-    var keys = Object.keys(tileHash);
-
-    for (var i = 0; i < keys.length; i++) {
-        if (tileHash[keys[i]]) {
-            mergedTileHash[+keys[i]] = true;
-        }
     }
 
     return mergedTileHash;
