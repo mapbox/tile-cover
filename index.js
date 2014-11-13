@@ -401,7 +401,7 @@ function hashToArray(hash) {
     var keys = Object.keys(hash);
     var tiles = [];
     for(var i = 0; i < keys.length; i++) {
-        tiles.push(fromID(keys[i]));
+        tiles.push(fromID(+keys[i]));
     }
     return tiles;
 }
