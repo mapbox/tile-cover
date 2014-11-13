@@ -1,3 +1,5 @@
+'use strict';
+
 var tilebelt = require('tilebelt');
 
 module.exports.geojson = function (geom, limits) {
@@ -296,9 +298,9 @@ function lineCover(coordinates, max_zoom) {
         segments.push([[start[0], start[1]], [stop[0], stop[1]]]);
     }
     for (var i = 0; i < segments.length; i++) {
-        var x0 = segments[i][0][0];
-            y0 = segments[i][0][1];
-            x1 = segments[i][1][0];
+        var x0 = segments[i][0][0],
+            y0 = segments[i][0][1],
+            x1 = segments[i][1][0],
             y1 = segments[i][1][1];
         // verify x0,y0 is far left
         if(x0 > x1) {
@@ -396,7 +398,7 @@ function hashMerge(hash1, hash2) {
 }
 
 function hashToArray(hash) {
-    keys = Object.keys(hash);
+    var keys = Object.keys(hash);
     var tiles = [];
     for(var i = 0; i < keys.length; i++) {
         tiles.push(fromID(keys[i]));

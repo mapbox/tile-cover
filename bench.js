@@ -14,9 +14,8 @@ var suite = new Benchmark.Suite('tile-cover',{
     }
 });
 
-zooms.forEach(function(zoom){
-    addBench(suite, point, 'point', zoom, zoom);
-});
+addBench(suite, point, 'point', zooms[0], zooms[0]);
+
 zooms.forEach(function(zoom){
     addBench(suite, line, 'road', zoom, zoom);
 });
