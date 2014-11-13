@@ -51,10 +51,7 @@ function getLocked (geom, limits) {
     } else if (geom.type === 'MultiPolygon') {
         var tileHash = {};
         for(var i = 0; i < geom.coordinates.length; i++) {
-            var polyHash = Object.keys(polyRingCover(geom.coordinates[i], limits.max_zoom));
-            for(var k = 0; k < polyHash.length; k++) {
-                tileHash[polyHash[k]] = true;
-            }
+            tileHash = hashMerge(tileHash, polyRingCover(geom.coordinates[i], limits.max_zoom));
         }
         locked = hashToArray(tileHash);
     } else {
@@ -97,7 +94,7 @@ function polyRingCover(ring, max_zoom) {
     var tileHash = {};
     var min = [null,Infinity];
     var max = [null,-Infinity];
-    for(var i = 0; i < ring[0].length; i++) { 
+    for(var i = 0; i < ring[0].length; i++) {
         if(ring[0][i][1] < min[1]) {
             min = ring[0][i];
         } else if (ring[0][i][1] > max[1]) {
@@ -129,9 +126,7 @@ function polyRingCover(ring, max_zoom) {
             }
         }
         // sort intersections by x
-        intersections = intersections.sort(function(a, b) {
-            return a[0] - b[0];
-        });
+        intersections.sort(compareX);
         // add tiles between intersection pairs
         for(var i = 0; i < intersections.length - 1; i++) {
             if(i % 2 === 0){
@@ -150,8 +145,12 @@ function polyRingCover(ring, max_zoom) {
     for(var i = 0; i < ring.length; i++) {
         tileHash = hashMerge(tileHash, lineCover(ring[i], max_zoom));
     }
-    
+
     return tileHash;
+}
+
+function compareX(a, b) {
+    return a[0] - b[0];
 }
 
 // Convert a set of rings into segments connecting tile coordinates.
@@ -245,7 +244,7 @@ function isLocalMax(i, segments) {
 // line1 is an infinite line, and line2 is a finite segment
 function lineIntersects(line1StartX, line1StartY, line1EndX, line1EndY, line2StartX, line2StartY, line2EndX, line2EndY, localMinMax) {
     var denominator,
-        a, 
+        a,
         b,
         numerator1,
         numerator2,
@@ -296,7 +295,7 @@ function lineCover(coordinates, max_zoom) {
         var stop = pointToTileFraction(coordinates[iNext][0], coordinates[iNext][1], max_zoom);
         segments.push([[start[0], start[1]], [stop[0], stop[1]]]);
     }
-    for (var i = 0; i < segments.length; i++) {  
+    for (var i = 0; i < segments.length; i++) {
         var x0 = segments[i][0][0];
             y0 = segments[i][0][1];
             x1 = segments[i][1][0];
@@ -315,7 +314,7 @@ function lineCover(coordinates, max_zoom) {
         var x1Floor = Math.floor(x1);
         var y1Floor = Math.floor(y1);
         /*
-        vertical intersects:   
+        vertical intersects:
 
         |  |  |  |
         |  |  |  |
@@ -324,7 +323,7 @@ function lineCover(coordinates, max_zoom) {
         */
         var x = 0;
         while(x0+x <= x1Floor+1) {
-            var intersection = lineIntersects(Math.floor(x0+x), y0-10000, Math.floor(x0+x), y0+10000, 
+            var intersection = lineIntersects(Math.floor(x0+x), y0-10000, Math.floor(x0+x), y0+10000,
                                               x0, y0, x1, y1);
 
             // add tile to the left and right of the intersection
@@ -359,7 +358,7 @@ function lineCover(coordinates, max_zoom) {
         var y1Floor = Math.floor(y1);
         var y = 0;
         while(y0+y >= y1Floor) {
-            var intersection = lineIntersects(x0-1000, Math.floor(y0+y), x0+1000, Math.floor(y0+y), 
+            var intersection = lineIntersects(x0-1000, Math.floor(y0+y), x0+1000, Math.floor(y0+y),
                                               x0, y0, x1, y1);
 
             // add tile above and below the intersection
