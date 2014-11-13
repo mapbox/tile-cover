@@ -26,9 +26,12 @@ module.exports.indexes = function (geom, limits) {
 };
 
 function getLocked (geom, limits) {
-    var locked = [];
+    var locked = [],
+        tileHash = {};
+
     if (geom.type === 'Point') {
         locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
+
     } else if (geom.type === 'MultiPoint') {
         var quadkeys = {};
         for(var i = 0; i < geom.coordinates.length; i++) {
@@ -39,27 +42,32 @@ function getLocked (geom, limits) {
                 locked.push(tile);
             }
         }
+
     } else if (geom.type === 'LineString') {
-        locked = hashToArray(lineCover(geom.coordinates, limits.max_zoom));
+        lineCover(tileHash, geom.coordinates, limits.max_zoom);
+        locked = hashToArray(tileHash);
+
     } else if (geom.type === 'MultiLineString') {
-        var tileHash = {};
         for(var i = 0; i < geom.coordinates.length; i++) {
-            tileHash = hashMerge(tileHash, lineCover(geom.coordinates[i], limits.max_zoom));
+            lineCover(tileHash, geom.coordinates[i], limits.max_zoom);
         }
         locked = hashToArray(tileHash);
+
     } else if (geom.type === 'Polygon') {
-        var tileHash = polyRingCover(geom.coordinates, limits.max_zoom);
+        polyRingCover(tileHash, geom.coordinates, limits.max_zoom);
         locked = hashToArray(tileHash);
+
     } else if (geom.type === 'MultiPolygon') {
-        var tileHash = {};
         for(var i = 0; i < geom.coordinates.length; i++) {
-            tileHash = hashMerge(tileHash, polyRingCover(geom.coordinates[i], limits.max_zoom));
+            polyRingCover(tileHash, geom.coordinates[i], limits.max_zoom);
         }
         locked = hashToArray(tileHash);
+
     } else {
         throw new Error('Geoemtry type not implemented');
     }
-    if(limits.min_zoom !== limits.max_zoom){
+
+    if (limits.min_zoom !== limits.max_zoom){
         locked = mergeTiles(locked, limits);
     }
     return locked;
@@ -91,9 +99,8 @@ function mergeTiles (tiles, limits) {
     }
 }
 
-function polyRingCover(ring, max_zoom) {
+function polyRingCover(tileHash, ring, max_zoom) {
     var segments = getTileSegments(ring, max_zoom);
-    var tileHash = {};
     var min = [null,Infinity];
     var max = [null,-Infinity];
     for(var i = 0; i < ring[0].length; i++) {
@@ -145,7 +152,7 @@ function polyRingCover(ring, max_zoom) {
     }
     // add any missing tiles with a segments pass
     for(var i = 0; i < ring.length; i++) {
-        tileHash = hashMerge(tileHash, lineCover(ring[i], max_zoom));
+        lineCover(tileHash, ring[i], max_zoom);
     }
 
     return tileHash;
@@ -283,8 +290,7 @@ function lineIntersects(line1StartX, line1StartY, line1EndX, line1EndY, line2Sta
     }
 }
 
-function lineCover(coordinates, max_zoom) {
-    var tileHash = {};
+function lineCover(tileHash, coordinates, max_zoom) {
     // break into segments and calculate bbox
     var segments = [];
     for(var i = 0; i < coordinates.length - 1; i++) {
@@ -387,14 +393,6 @@ function pointToTileFraction (lon, lat, z) {
     var yPercentOffset = yPointOffset / yTileOffset;
 
     return [tile[0]+xPercentOffset, tile[1]+yPercentOffset];
-}
-
-function hashMerge(hash1, hash2) {
-    var keys = Object.keys(hash2);
-    for(var i = 0; i < keys.length; i++) {
-        hash1[keys[i]] = true;
-    }
-    return hash1;
 }
 
 function hashToArray(hash) {
