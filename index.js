@@ -154,8 +154,6 @@ function polyRingCover(tileHash, ring, max_zoom) {
     for(var i = 0; i < ring.length; i++) {
         lineCover(tileHash, ring[i], max_zoom);
     }
-
-    return tileHash;
 }
 
 function compareX(a, b) {
@@ -290,94 +288,43 @@ function lineIntersects(line1StartX, line1StartY, line1EndX, line1EndY, line2Sta
     }
 }
 
-function lineCover(tileHash, coordinates, max_zoom) {
-    // break into segments and calculate bbox
-    var segments = [];
-    for(var i = 0; i < coordinates.length - 1; i++) {
-        var iNext = i+1;
-        // add endpoint tiles in case line is contained withing a single tile
-        tileHash[toID.apply(null, tilebelt.pointToTile(coordinates[i][0], coordinates[i][1], max_zoom))] = true;
-        tileHash[toID.apply(null, tilebelt.pointToTile(coordinates[iNext][0], coordinates[iNext][1], max_zoom))] = true;
-        // encode segments as tile fractions
-        var start = pointToTileFraction(coordinates[i][0], coordinates[i][1], max_zoom);
-        var stop = pointToTileFraction(coordinates[iNext][0], coordinates[iNext][1], max_zoom);
-        segments.push([[start[0], start[1]], [stop[0], stop[1]]]);
-    }
-    for (var i = 0; i < segments.length; i++) {
-        var x0 = segments[i][0][0],
-            y0 = segments[i][0][1],
-            x1 = segments[i][1][0],
-            y1 = segments[i][1][1];
-        // verify x0,y0 is far left
-        if(x0 > x1) {
-            var firstX = x0;
-            var firstY = y0;
-            x0 = x1;
-            y0 = y1;
-            x1 = firstX;
-            y1 = firstY;
-        }
-        var x0Floor = Math.floor(x0);
-        var y0Floor = Math.floor(y0);
-        var x1Floor = Math.floor(x1);
-        var y1Floor = Math.floor(y1);
-        /*
-        vertical intersects:
+function lineCover(tileHash, coords, max_zoom) {
+    for (var i = 0; i < coords.length - 1; i++) {
+        var start = pointToTileFraction(coords[i][0], coords[i][1], max_zoom),
+            stop = pointToTileFraction(coords[i + 1][0], coords[i + 1][1], max_zoom),
+            x0 = start[0],
+            y0 = start[1],
+            x1 = stop[0],
+            y1 = stop[1],
+            dx = x1 - x0,
+            dy = y1 - y0,
+            sx = dx > 0 ? 1 : -1,
+            sy = dy > 0 ? 1 : -1,
+            x = Math.floor(x0),
+            y = Math.floor(y0),
+            tMaxX = Math.abs(((dx > 0 ? 1 : 0) + x - x0) / dx),
+            tMaxY = Math.abs(((dy > 0 ? 1 : 0) + y - y0) / dy),
+            tdx = Math.abs(sx / dx),
+            tdy = Math.abs(sy / dy);
 
-        |  |  |  |
-        |  |  |  |
-        |  |  |  |
+        tileHash[toID(x, y, max_zoom)] = true;
 
-        */
-        var x = 0;
-        while(x0+x <= x1Floor+1) {
-            var intersection = lineIntersects(Math.floor(x0+x), y0-10000, Math.floor(x0+x), y0+10000,
-                                              x0, y0, x1, y1);
+        // handle edge cases
+        if (dy === 0 && dx === 0) continue;
+        if (isNaN(tMaxX)) tMaxX = Infinity;
+        if (isNaN(tMaxY)) tMaxY = Infinity;
 
-            // add tile to the left and right of the intersection
-            //todo: check intersect and the two tiles being hashed
-            if(intersection){
-                tileHash[toID(Math.floor(intersection[0]-1), Math.floor(intersection[1]), max_zoom)] = true;
-                tileHash[toID(Math.floor(intersection[0]), Math.floor(intersection[1]), max_zoom)] = true;
+        while (tMaxX < 1 || tMaxY < 1) {
+            if (tMaxX < tMaxY) {
+                tMaxX += tdx;
+                x += sx;
+            } else {
+                tMaxY += tdy;
+                y += sy;
             }
-            x++;
-        }
-
-        /*
-        horizontal intersects
-
-        ________
-        ________
-        ________
-
-        */
-        // verify x0,y0 is top
-        if(y0 < y1) {
-            var firstX = x0;
-            var firstY = y0;
-            x0 = x1;
-            y0 = y1;
-            x1 = firstX;
-            y1 = firstY;
-        }
-        var x0Floor = Math.floor(x0);
-        var y0Floor = Math.floor(y0);
-        var x1Floor = Math.floor(x1);
-        var y1Floor = Math.floor(y1);
-        var y = 0;
-        while(y0+y >= y1Floor) {
-            var intersection = lineIntersects(x0-1000, Math.floor(y0+y), x0+1000, Math.floor(y0+y),
-                                              x0, y0, x1, y1);
-
-            // add tile above and below the intersection
-            if(intersection){
-                tileHash[toID(Math.floor(intersection[0]), Math.floor(intersection[1]), max_zoom)] = true;
-                tileHash[toID(Math.floor(intersection[0]), Math.floor(intersection[1]-1), max_zoom)] = true;
-            }
-            y--;
+            tileHash[toID(x, y, max_zoom)] = true;
         }
     }
-    return tileHash;
 }
 
 function pointToTileFraction (lon, lat, z) {
