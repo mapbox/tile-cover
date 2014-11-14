@@ -1,5 +1,8 @@
 var cover = require('../'),
     test = require('tape'),
+    intersect = require('turf-intersect');
+    merge = require('turf-merge');
+    erase = require('turf-erase');
     fs = require('fs');
 
 var REGEN = process.env.REGEN;
@@ -71,6 +74,7 @@ test('polygon', function(t){
     t.ok(cover.tiles(polygon, limits).length, 'polygon tiles');
     t.ok(cover.indexes(polygon, limits).length, 'polygon indexes');
     compareFixture(t, polygon, limits, __dirname+'/fixtures/polygon_out.geojson');
+    //verifyCover(t, polygon, limits);
     t.end();
 });
 
@@ -272,14 +276,6 @@ test('blocky polygon', function(t){
     t.end();
 });
 
-function f(g, name){
-    return {
-        type:'Feature',
-        properties: {name: name},
-        geometry: g
-    };
-}
-
 function compareFixture(t, geom, limits, filepath) {
     var result = cover.geojson(geom, limits);
     result.features.push({
@@ -289,6 +285,7 @@ function compareFixture(t, geom, limits, filepath) {
     });
     // Sort features to ensure changes such that changes to tile cover
     // order is not considered significant.
+    
     result.features.sort(function(a, b) {
         if (a.properties.name === 'original') return 1;
         if (b.properties.name === 'original') return -1;
@@ -314,3 +311,17 @@ function roundify(key, val) {
     return parseFloat(val.toFixed(8));
 }
 
+function verifyCover(t, geom, limits) {
+
+    var tiles = cover.geojson(geom, limits);
+    // every tile should have something inside of it
+    tiles.features.forEach(function(tile){ // 'tile' is one feature object
+        var overlap = intersect(tile, geom);
+        t.notEqual(overlap.features[0].type, 'GeometryCollection', 'Empty tile not found')
+    });
+
+    // there should be no geometry not covered by a tile
+    var mergedTiles = merge(tiles);
+    var knockout = erase(geom, mergedTiles);
+    t.deepEqual(knockout, [], 'Cover left no exposed geometry')
+}

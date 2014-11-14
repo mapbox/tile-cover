@@ -27,7 +27,7 @@ test('the world', function(t){
         
         countryTiles.forEach(function(tile){ // 'tile' is one feature object
             var overlap = intersect(tile, countryGeom);
-            t.notEqual(overlap.features[0].type, 'GeometryCollection', 'Empty tile not found')
+            t.notDeepEqual(overlap, [], 'Empty tile not found')
         });
 
         var countryBlock = merge(countryCover);
@@ -35,7 +35,7 @@ test('the world', function(t){
         if(!countryBlock) t.fail('Tile merge failed');
         
         var knockout = erase(country.features[0], countryBlock);
-        t.deepEqual(knockout.geometry.geometries, [], 'Cover left no exposed geometry')
+        t.deepEqual(knockout, [], 'Cover left no exposed geometry')
 
         compareFixture(t, countryGeom, limits, __dirname+'/fixtures/world/'+countryName.split('.')[0]+'_out.geojson');
     });

@@ -5,7 +5,11 @@ var tilebelt = require('tilebelt');
 module.exports.geojson = function (geom, limits) {
     var locked = getLocked(geom, limits);
     var tileFeatures = locked.map(function (t) {
-        return tilebelt.tileToGeoJSON(t);
+        return {
+            type: 'Feature',
+            geometry: tilebelt.tileToGeoJSON(t),
+            properties: {}
+        }
     });
     return {
         type: 'FeatureCollection',
@@ -61,7 +65,7 @@ function getLocked (geom, limits) {
         }
 
     } else {
-        throw new Error('Geoemtry type not implemented');
+        throw new Error('Geometry type not implemented');
     }
 
     if (!locked) {
@@ -365,21 +369,6 @@ function hashToArray(hash) {
         tiles.push(fromID(+keys[i]));
     }
     return tiles;
-}
-
-function feature (geom) {
-    return {
-        type: 'Feature',
-        geometry: geom,
-        properties: {}
-    };
-}
-
-function fc (feat) {
-    return {
-        type: 'FeatureCollection',
-        features: [feat]
-    };
 }
 
 function toID(x, y, z) {
