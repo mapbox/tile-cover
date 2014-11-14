@@ -34,17 +34,17 @@
     },
     {
       "type": "Feature",
-      "properties": {
-        "name": "original",
-        "stroke": "#f44",
-        "fill": "#f44"
-      },
       "geometry": {
         "type": "Point",
         "coordinates": [
           79.08096313,
           21.13518486
         ]
+      },
+      "properties": {
+        "name": "original",
+        "stroke": "#f44",
+        "fill": "#f44"
       }
     }
   ]

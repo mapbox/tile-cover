@@ -313,11 +313,6 @@
     },
     {
       "type": "Feature",
-      "properties": {
-        "name": "original",
-        "stroke": "#f44",
-        "fill": "#f44"
-      },
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -338,6 +333,11 @@
             28.60743139
           ]
         ]
+      },
+      "properties": {
+        "name": "original",
+        "stroke": "#f44",
+        "fill": "#f44"
       }
     }
   ]

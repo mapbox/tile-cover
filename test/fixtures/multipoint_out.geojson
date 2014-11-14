@@ -96,11 +96,6 @@
     },
     {
       "type": "Feature",
-      "properties": {
-        "name": "original",
-        "stroke": "#f44",
-        "fill": "#f44"
-      },
       "geometry": {
         "type": "MultiPoint",
         "coordinates": [
@@ -121,6 +116,11 @@
             39.93711893
           ]
         ]
+      },
+      "properties": {
+        "name": "original",
+        "stroke": "#f44",
+        "fill": "#f44"
       }
     }
   ]

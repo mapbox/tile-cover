@@ -74,7 +74,7 @@ test('polygon', function(t){
     t.ok(cover.tiles(polygon, limits).length, 'polygon tiles');
     t.ok(cover.indexes(polygon, limits).length, 'polygon indexes');
     compareFixture(t, polygon, limits, __dirname+'/fixtures/polygon_out.geojson');
-    //verifyCover(t, polygon, limits);
+    verifyCover(t, polygon, limits);
     t.end();
 });
 
@@ -219,7 +219,7 @@ test('invalid polygon --- hourglass', function(t) {
 });
 
 test('high zoom', function(t){
-    var building = {"properties":{"osm_id":0},"geometry":{"type":"Polygon","coordinates":[[[-77.04474940896034,38.90019399459534],[-77.04473063349724,38.90019399459534],[-77.04473063349724,38.90027122854152],[-77.04474672675133,38.900273315944304],[-77.04474672675133,38.900457007149065],[-77.04394474625587,38.90017520794709],[-77.04394206404686,38.900173120541425],[-77.04384550452232,38.9001710331357],[-77.04384550452232,38.900141809449025],[-77.04365238547325,38.90007501240577],[-77.04365238547325,38.89989340762676],[-77.04371139407158,38.899916369176196],[-77.04371139407158,38.89986209641103],[-77.04369261860847,38.89986209641103],[-77.04369261860847,38.89969927786663],[-77.04452946782112,38.89969719044697],[-77.04460456967354,38.89967214140626],[-77.04460725188255,38.89969510302724],[-77.04474672675133,38.89969719044697],[-77.04474940896034,38.90019399459534],[-77.04474940896034,38.90019399459534],[-77.04474940896034,38.90019399459534]]]},"type":"Feature"};
+    var building = {"type":"Feature", "geometry":{"type":"Polygon","coordinates":[[[-77.04474940896034,38.90019399459534],[-77.04473063349724,38.90019399459534],[-77.04473063349724,38.90027122854152],[-77.04474672675133,38.900273315944304],[-77.04474672675133,38.900457007149065],[-77.04394474625587,38.90017520794709],[-77.04394206404686,38.900173120541425],[-77.04384550452232,38.9001710331357],[-77.04384550452232,38.900141809449025],[-77.04365238547325,38.90007501240577],[-77.04365238547325,38.89989340762676],[-77.04371139407158,38.899916369176196],[-77.04371139407158,38.89986209641103],[-77.04369261860847,38.89986209641103],[-77.04369261860847,38.89969927786663],[-77.04452946782112,38.89969719044697],[-77.04460456967354,38.89967214140626],[-77.04460725188255,38.89969510302724],[-77.04474672675133,38.89969719044697],[-77.04474940896034,38.90019399459534],[-77.04474940896034,38.90019399459534],[-77.04474940896034,38.90019399459534]]]}, "properties":{"osm_id":0}};
     building = building.geometry;
 
     var limits = {
@@ -280,8 +280,8 @@ function compareFixture(t, geom, limits, filepath) {
     var result = cover.geojson(geom, limits);
     result.features.push({
         type: 'Feature',
-        properties: {name:'original', stroke:'#f44', fill:'#f44'},
-        geometry: geom
+        geometry: geom,
+        properties: {name:'original', stroke:'#f44', fill:'#f44'}
     });
     // Sort features to ensure changes such that changes to tile cover
     // order is not considered significant.
@@ -312,16 +312,18 @@ function roundify(key, val) {
 }
 
 function verifyCover(t, geom, limits) {
-
     var tiles = cover.geojson(geom, limits);
     // every tile should have something inside of it
+    var emptyTile = false
     tiles.features.forEach(function(tile){ // 'tile' is one feature object
         var overlap = intersect(tile, geom);
-        t.notEqual(overlap.features[0].type, 'GeometryCollection', 'Empty tile not found')
+        if(overlap === []) emptyTile = true;
     });
+    if(emptyTile) t.fail('Empty tile found');
 
     // there should be no geometry not covered by a tile
     var mergedTiles = merge(tiles);
     var knockout = erase(geom, mergedTiles);
     t.deepEqual(knockout, [], 'Cover left no exposed geometry')
+    console.log(JSON.stringify(knockout))
 }

@@ -623,11 +623,6 @@
     },
     {
       "type": "Feature",
-      "properties": {
-        "name": "original",
-        "stroke": "#f44",
-        "fill": "#f44"
-      },
       "geometry": {
         "type": "MultiLineString",
         "coordinates": [
@@ -680,6 +675,11 @@
             ]
           ]
         ]
+      },
+      "properties": {
+        "name": "original",
+        "stroke": "#f44",
+        "fill": "#f44"
       }
     }
   ]

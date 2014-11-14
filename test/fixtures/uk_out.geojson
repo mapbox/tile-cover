@@ -2111,11 +2111,6 @@
     },
     {
       "type": "Feature",
-      "properties": {
-        "name": "original",
-        "stroke": "#f44",
-        "fill": "#f44"
-      },
       "geometry": {
         "type": "MultiPolygon",
         "coordinates": [
@@ -2352,6 +2347,11 @@
             ]
           ]
         ]
+      },
+      "properties": {
+        "name": "original",
+        "stroke": "#f44",
+        "fill": "#f44"
       }
     }
   ]
