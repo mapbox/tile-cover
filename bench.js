@@ -7,7 +7,7 @@ var line = JSON.parse(fs.readFileSync('./test/fixtures/road.geojson'));
 var point = JSON.parse(fs.readFileSync('./test/fixtures/point.geojson'));
 var russia = JSON.parse(fs.readFileSync('./test/fixtures/russia.geojson'));
 var russiaLine = {type: 'LineString', coordinates: russia.coordinates[0]};
-var zooms = [6,8,10,12,18];
+var zooms = [6,8,10,12,18,20,25,28];
 
 var suite = new Benchmark.Suite('tile-cover',{
     onError: function(err) {
