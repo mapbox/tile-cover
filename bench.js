@@ -30,6 +30,8 @@ zooms.slice(0, 3).forEach(function(zoom){
     addBench(suite, russiaLine, 'russia polyline', zoom, zoom);
 });
 
+addBench(suite, russia, 'russia polygon multizoom', 0, 9);
+
 suite.on('cycle', function(event) {
     console.log(String(event.target));
 }).run();

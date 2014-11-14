@@ -26,14 +26,15 @@ module.exports.indexes = function (geom, limits) {
 };
 
 function getLocked (geom, limits) {
-    var locked = [],
+    var locked,
         tileHash = {};
 
     if (geom.type === 'Point') {
-        locked.push(tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom));
+        locked = [tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom)];
 
     } else if (geom.type === 'MultiPoint') {
         var quadkeys = {};
+        locked = [];
         for(var i = 0; i < geom.coordinates.length; i++) {
             var tile = tilebelt.pointToTile(geom.coordinates[i][0], geom.coordinates[i][1], limits.max_zoom);
             var quadkey = tilebelt.tileToQuadkey(tile);
@@ -45,58 +46,73 @@ function getLocked (geom, limits) {
 
     } else if (geom.type === 'LineString') {
         lineCover(tileHash, geom.coordinates, limits.max_zoom);
-        locked = hashToArray(tileHash);
 
     } else if (geom.type === 'MultiLineString') {
         for(var i = 0; i < geom.coordinates.length; i++) {
             lineCover(tileHash, geom.coordinates[i], limits.max_zoom);
         }
-        locked = hashToArray(tileHash);
 
     } else if (geom.type === 'Polygon') {
         polyRingCover(tileHash, geom.coordinates, limits.max_zoom);
-        locked = hashToArray(tileHash);
 
     } else if (geom.type === 'MultiPolygon') {
         for(var i = 0; i < geom.coordinates.length; i++) {
             polyRingCover(tileHash, geom.coordinates[i], limits.max_zoom);
         }
-        locked = hashToArray(tileHash);
 
     } else {
         throw new Error('Geoemtry type not implemented');
     }
 
-    if (limits.min_zoom !== limits.max_zoom){
-        locked = mergeTiles(locked, limits);
+    if (!locked) {
+        if (limits.min_zoom !== limits.max_zoom){
+            tileHash = mergeTiles(tileHash, limits);
+        }
+        locked = hashToArray(tileHash);
     }
+
     return locked;
 }
 
-function mergeTiles (tiles, limits) {
-    var merged = [];
-    var changed = false;
-    tiles.forEach(function (t) {
-        // top left and has all siblings -- merge
-        if ((t[0] % 2 === 0 && t[1] % 2 === 0) && tilebelt.hasSiblings(t, tiles)) {
-            if (t[2] > limits.min_zoom) {
-                merged.push(tilebelt.getParent(t));
-                changed = true;
-            } else {
-                merged = merged.concat(tilebelt.getSiblings(t));
+function mergeTiles(tileHash, limits) {
+    var mergedTileHash = {};
+
+    for (var z = limits.max_zoom; z > limits.min_zoom; z--) {
+
+        var keys = Object.keys(tileHash);
+        var parentTileHash = {};
+
+        for (var i = 0; i < keys.length; i++) {
+            var id1 = +keys[i],
+                t = fromID(id1);
+
+            if (t[0] % 2 === 0 && t[1] % 2 === 0) {
+                var id2 = toID(t[0] + 1, t[1], z),
+                    id3 = toID(t[0], t[1] + 1, z),
+                    id4 = toID(t[0] + 1, t[1] + 1, z);
+
+                if (tileHash[id2] && tileHash[id3] && tileHash[id4]) {
+                    tileHash[id1] = false;
+                    tileHash[id2] = false;
+                    tileHash[id3] = false;
+                    tileHash[id4] = false;
+
+                    var parentId = toID(t[0] / 2, t[1] / 2, z - 1);
+                    (z - 1 === limits.min_zoom ? mergedTileHash : parentTileHash)[parentId] = true;
+                }
             }
         }
-        // does not have all siblings -- add
-        else if (!tilebelt.hasSiblings(t, tiles)) {
-            merged.push(t);
+
+        for (var i = 0; i < keys.length; i++) {
+            if (tileHash[keys[i]]) {
+                mergedTileHash[+keys[i]] = true;
+            }
         }
-    });
-    // stop if the last round had no merges
-    if (!changed) {
-        return merged;
-    } else {
-        return mergeTiles(merged, limits);
+
+        tileHash = parentTileHash;
     }
+
+    return mergedTileHash;
 }
 
 function polyRingCover(tileHash, ring, max_zoom) {
