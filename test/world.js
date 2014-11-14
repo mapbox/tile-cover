@@ -24,11 +24,12 @@ test('the world', function(t){
         var countryCover = cover.geojson(countryGeom, limits); // returns a feature collection of tiles 
         var countryTiles = countryCover.features; // 
         t.ok(countryCover, 'Create a cover');
-        
+        var emptyTile = false;
         countryTiles.forEach(function(tile){ // 'tile' is one feature object
             var overlap = intersect(tile, countryGeom);
-            t.notDeepEqual(overlap, [], 'Empty tile not found')
+            if(overlap === []) emptyTile = true;
         });
+        if(emptyTile) t.fail('Empty tile not found');
 
         var countryBlock = merge(countryCover);
         var countryBlockGeom = countryBlock.geometry;

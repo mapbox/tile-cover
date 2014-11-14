@@ -325,5 +325,4 @@ function verifyCover(t, geom, limits) {
     var mergedTiles = merge(tiles);
     var knockout = erase(geom, mergedTiles);
     t.deepEqual(knockout, [], 'Cover left no exposed geometry')
-    console.log(JSON.stringify(knockout))
 }
