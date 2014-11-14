@@ -1,5 +1,3 @@
-'use strict';
-
 var tilebelt = require('tilebelt');
 
 module.exports.geojson = function (geom, limits) {
@@ -35,7 +33,6 @@ function getLocked (geom, limits) {
 
     if (geom.type === 'Point') {
         locked = [tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom)];
-
     } else if (geom.type === 'MultiPoint') {
         var quadkeys = {};
         locked = [];
@@ -47,7 +44,6 @@ function getLocked (geom, limits) {
                 locked.push(tile);
             }
         }
-
     } else if (geom.type === 'LineString') {
         lineCover(tileHash, geom.coordinates, limits.max_zoom);
 
@@ -55,7 +51,6 @@ function getLocked (geom, limits) {
         for(var i = 0; i < geom.coordinates.length; i++) {
             lineCover(tileHash, geom.coordinates[i], limits.max_zoom);
         }
-
     } else if (geom.type === 'Polygon') {
         polyRingCover(tileHash, geom.coordinates, limits.max_zoom);
 
@@ -63,7 +58,6 @@ function getLocked (geom, limits) {
         for(var i = 0; i < geom.coordinates.length; i++) {
             polyRingCover(tileHash, geom.coordinates[i], limits.max_zoom);
         }
-
     } else {
         throw new Error('Geometry type not implemented');
     }
