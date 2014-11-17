@@ -314,7 +314,7 @@ function roundify(key, val) {
 function verifyCover(t, geom, limits) {
     var tiles = cover.geojson(geom, limits);
     // every tile should have something inside of it
-    var emptyTile = false
+    var emptyTile = false;
     tiles.features.forEach(function(tile){ // 'tile' is one feature object
         var overlap = intersect(tile, geom);
         if(overlap === []) emptyTile = true;
@@ -324,5 +324,5 @@ function verifyCover(t, geom, limits) {
     // there should be no geometry not covered by a tile
     var mergedTiles = merge(tiles);
     var knockout = erase(geom, mergedTiles);
-    t.deepEqual(knockout, [], 'Cover left no exposed geometry')
+    t.deepEqual(knockout, [], 'Cover left no exposed geometry');
 }
