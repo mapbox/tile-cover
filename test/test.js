@@ -69,7 +69,7 @@ test('polygon', function(t){
         min_zoom: 1,
         max_zoom: 15
     };
-
+    
     t.ok(cover.geojson(polygon, limits), 'polygon geojson');
     t.ok(cover.tiles(polygon, limits).length, 'polygon tiles');
     t.ok(cover.indexes(polygon, limits).length, 'polygon indexes');

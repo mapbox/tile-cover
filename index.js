@@ -139,15 +139,21 @@ function polyRingCover(tileHash, ring, max_zoom) {
                 segments[i][0][0], segments[i][0][1],
                 segments[i][1][0], segments[i][1][1],
                 localMin || localMax);
-            // Special treatment for horizontal segments.
-            // @TODO get lineIntersects to handle this.
             if (segments[i][0][1] === y && segments[i][0][1] === segments[i][1][1]) {
-                intersections.push([segments[i][0][0], segments[i][0][1]]);
-                if (!localMin && !localMax) intersections.push([segments[i][1][0], segments[i][1][1]]);
+                // horizontal segment
+                // do not add if it is on the topline. this will cause duplicates on the edges.
+                if(!(segments[i][0][1] === y)){
+                    intersections.push([segments[i][0][0], segments[i][0][1]]);
+                    if (!localMin && !localMax) {
+                        intersections.push([segments[i][1][0], segments[i][1][1]]);
+                    }
+                }
             } else if (intersection !== false) {
-                intersections.push([Math.round(intersection[0]), Math.round(intersection[1])]);
+                // non-horizontal intersection
+                intersections.push([intersection[0], intersection[1]]);
             }
         }
+
         // sort intersections by x
         intersections.sort(compareX);
         // add tiles between intersection pairs
