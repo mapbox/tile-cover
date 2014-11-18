@@ -5,7 +5,7 @@ var cover = require('../'),
     erase = require('turf-erase');
     fs = require('fs');
 
-var REGEN = process.env.REGEN;
+var REGEN = true
 
 test('point', function(t){
     var point = {
@@ -286,6 +286,34 @@ test('blocky polygon', function(t){
     t.equal(cover.indexes(blocky, limits).length, 31, 'blocky indexes');
     compareFixture(t, blocky, limits, __dirname+'/fixtures/blocky_out.geojson');
     verifyCover(t, blocky, limits);
+    t.end();
+});
+
+test('pyramid polygon', function(t){
+    var pyramid = JSON.parse(fs.readFileSync(__dirname+'/fixtures/pyramid.geojson'));
+    var limits = {
+        min_zoom: 10,
+        max_zoom: 10
+    };
+
+    t.ok(cover.geojson(pyramid, limits), 'pyramid geojson');
+    t.ok(cover.tiles(pyramid, limits).length, 'pyramid tiles');
+    compareFixture(t, pyramid, limits, __dirname+'/fixtures/pyramid_out.geojson');
+    verifyCover(t, pyramid, limits);
+    t.end();
+});
+
+test('tetris polygon', function(t){
+    var tetris = JSON.parse(fs.readFileSync(__dirname+'/fixtures/tetris.geojson'));
+    var limits = {
+        min_zoom: 10,
+        max_zoom: 10
+    };
+
+    t.ok(cover.geojson(tetris, limits), 'tetris geojson');
+    t.ok(cover.tiles(tetris, limits).length, 'tetris tiles');
+    compareFixture(t, tetris, limits, __dirname+'/fixtures/tetris_out.geojson');
+    verifyCover(t, tetris, limits);
     t.end();
 });
 
