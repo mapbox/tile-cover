@@ -298,7 +298,6 @@ function compareFixture(t, geom, limits, filepath) {
     });
     // Sort features to ensure changes such that changes to tile cover
     // order is not considered significant.
-    
     result.features.sort(function(a, b) {
         if (a.properties.name === 'original') return 1;
         if (b.properties.name === 'original') return -1;
