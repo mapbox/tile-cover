@@ -5,7 +5,7 @@ var cover = require('../'),
     erase = require('turf-erase');
     fs = require('fs');
 
-var REGEN = true
+var REGEN = process.env.REGEN;
 
 test('point', function(t){
     var point = {
@@ -316,6 +316,21 @@ test('tetris polygon', function(t){
     verifyCover(t, tetris, limits);
     t.end();
 });
+
+test('0,0 polygon', function(t){
+    var zero = JSON.parse(fs.readFileSync(__dirname+'/fixtures/zero.geojson'));
+    var limits = {
+        min_zoom: 10,
+        max_zoom: 10
+    };
+
+    t.ok(cover.geojson(zero, limits), '0,0 geojson');
+    t.ok(cover.tiles(zero, limits).length, '0,0 tiles');
+    compareFixture(t, zero, limits, __dirname+'/fixtures/zero_out.geojson');
+    verifyCover(t, zero, limits);
+    t.end();
+});
+
 
 function compareFixture(t, geom, limits, filepath) {
     var result = cover.geojson(geom, limits);
