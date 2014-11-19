@@ -1,11 +1,13 @@
-'use strict';
-
 var tilebelt = require('tilebelt');
 
 module.exports.geojson = function (geom, limits) {
     var locked = getLocked(geom, limits);
     var tileFeatures = locked.map(function (t) {
-        return tilebelt.tileToGeoJSON(t);
+        return {
+            type: 'Feature',
+            geometry: tilebelt.tileToGeoJSON(t),
+            properties: {}
+        }
     });
     return {
         type: 'FeatureCollection',
@@ -31,7 +33,6 @@ function getLocked (geom, limits) {
 
     if (geom.type === 'Point') {
         locked = [tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom)];
-
     } else if (geom.type === 'MultiPoint') {
         var quadkeys = {};
         locked = [];
@@ -43,7 +44,6 @@ function getLocked (geom, limits) {
                 locked.push(tile);
             }
         }
-
     } else if (geom.type === 'LineString') {
         lineCover(tileHash, geom.coordinates, limits.max_zoom);
 
@@ -51,7 +51,6 @@ function getLocked (geom, limits) {
         for(var i = 0; i < geom.coordinates.length; i++) {
             lineCover(tileHash, geom.coordinates[i], limits.max_zoom);
         }
-
     } else if (geom.type === 'Polygon') {
         polyRingCover(tileHash, geom.coordinates, limits.max_zoom);
 
@@ -59,9 +58,8 @@ function getLocked (geom, limits) {
         for(var i = 0; i < geom.coordinates.length; i++) {
             polyRingCover(tileHash, geom.coordinates[i], limits.max_zoom);
         }
-
     } else {
-        throw new Error('Geoemtry type not implemented');
+        throw new Error('Geometry type not implemented');
     }
 
     if (!locked) {
@@ -141,15 +139,21 @@ function polyRingCover(tileHash, ring, max_zoom) {
                 segments[i][0][0], segments[i][0][1],
                 segments[i][1][0], segments[i][1][1],
                 localMin || localMax);
-            // Special treatment for horizontal segments.
-            // @TODO get lineIntersects to handle this.
             if (segments[i][0][1] === y && segments[i][0][1] === segments[i][1][1]) {
-                intersections.push([segments[i][0][0], segments[i][0][1]]);
-                if (!localMin && !localMax) intersections.push([segments[i][1][0], segments[i][1][1]]);
+                // horizontal segment
+                // do not add if it is on the topline. this will cause duplicates on the edges.
+                if(!(segments[i][0][1] === y)){
+                    intersections.push([segments[i][0][0], segments[i][0][1]]);
+                    if (!localMin && !localMax) {
+                        intersections.push([segments[i][1][0], segments[i][1][1]]);
+                    }
+                }
             } else if (intersection !== false) {
-                intersections.push([Math.round(intersection[0]), Math.round(intersection[1])]);
+                // non-horizontal intersection
+                intersections.push([Math.floor(intersection[0]), Math.floor(intersection[1])]);
             }
         }
+
         // sort intersections by x
         intersections.sort(compareX);
         // add tiles between intersection pairs
@@ -365,21 +369,6 @@ function hashToArray(hash) {
         tiles.push(fromID(+keys[i]));
     }
     return tiles;
-}
-
-function feature (geom) {
-    return {
-        type: 'Feature',
-        geometry: geom,
-        properties: {}
-    };
-}
-
-function fc (feat) {
-    return {
-        type: 'FeatureCollection',
-        features: [feat]
-    };
 }
 
 function toID(x, y, z) {

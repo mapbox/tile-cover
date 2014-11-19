@@ -1,8 +1,11 @@
 var cover = require('../'),
     test = require('tape'),
+    intersect = require('turf-intersect');
+    merge = require('turf-merge');
+    erase = require('turf-erase');
     fs = require('fs');
 
-var REGEN = process.env.REGEN;
+var REGEN = true
 
 test('point', function(t){
     var point = {
@@ -29,6 +32,7 @@ test('point', function(t){
     t.equal(typeof cover.tiles(point.geometry, limits)[0][1], 'number');
     t.equal(typeof cover.tiles(point.geometry, limits)[0][2], 'number');
     compareFixture(t, point.geometry, limits, __dirname+'/fixtures/point_out.geojson');
+    verifyCover(t, point.geometry, limits);
     t.end();
 });
 
@@ -43,6 +47,7 @@ test('line', function(t){
     t.ok(cover.tiles(line.geometry, limits).length, 'line tiles');
     t.ok(cover.indexes(line.geometry, limits).length, 'line indexes');
     compareFixture(t, line.geometry, limits, __dirname+'/fixtures/line_out.geojson');
+    verifyCover(t, line.geometry, limits);
     t.end();
 });
 
@@ -57,6 +62,7 @@ test('edgeline', function(t){
     t.deepEqual(cover.tiles(line.geometry, limits), [ [ 4543, 6612, 14 ], [ 4544, 6612, 14 ] ], 'edgeline tiles');
     t.deepEqual(cover.indexes(line.geometry, limits).length, 2, 'edgeline indexes');
     compareFixture(t, line.geometry, limits, __dirname+'/fixtures/edgeline_out.geojson');
+    verifyCover(t, line.geometry, limits);
     t.end();
 });
 
@@ -71,6 +77,7 @@ test('polygon', function(t){
     t.ok(cover.tiles(polygon, limits).length, 'polygon tiles');
     t.ok(cover.indexes(polygon, limits).length, 'polygon indexes');
     compareFixture(t, polygon, limits, __dirname+'/fixtures/polygon_out.geojson');
+    verifyCover(t, polygon, limits);
     t.end();
 });
 
@@ -92,6 +99,7 @@ test('multipoint', function(t){
     t.equal(typeof cover.tiles(multipoint.geometry, limits)[0][1], 'number');
     t.equal(typeof cover.tiles(multipoint.geometry, limits)[0][2], 'number');
     compareFixture(t, multipoint.geometry, limits, __dirname+'/fixtures/multipoint_out.geojson');
+    verifyCover(t, multipoint.geometry, limits);
     t.end();
 });
 
@@ -113,6 +121,7 @@ test('multiline', function(t){
     t.equal(typeof cover.tiles(multiline.geometry, limits)[0][1], 'number');
     t.equal(typeof cover.tiles(multiline.geometry, limits)[0][2], 'number');
     compareFixture(t, multiline.geometry, limits, __dirname+'/fixtures/multiline_out.geojson');
+    verifyCover(t, multiline.geometry, limits);
     t.end();
 });
 
@@ -127,6 +136,7 @@ test('uk', function(t){
     t.ok(cover.tiles(uk.geometry, limits).length, 'uk tiles');
     t.ok(cover.indexes(uk.geometry, limits).length, 'uk indexes');
     compareFixture(t, uk.geometry, limits, __dirname+'/fixtures/uk_out.geojson');
+    verifyCover(t, uk.geometry, limits);
     t.end();
 });
 
@@ -141,6 +151,7 @@ test('building', function(t){
     t.ok(cover.tiles(building, limits).length, 'building tiles');
     t.ok(cover.indexes(building, limits).length, 'building indexes');
     compareFixture(t, building, limits, __dirname+'/fixtures/building_out.geojson');
+    verifyCover(t, building, limits);
     t.end();
 });
 
@@ -155,6 +166,7 @@ test('donut', function(t){
     t.ok(cover.tiles(fixture, limits).length, 'donut tiles');
     t.ok(cover.indexes(fixture, limits).length, 'donut indexes');
     compareFixture(t, fixture, limits, __dirname+'/fixtures/donut_out.geojson');
+    verifyCover(t, fixture, limits);
     t.end();
 });
 
@@ -170,6 +182,7 @@ test('russia', function(t){
     t.ok(cover.indexes(russia, limits).length, 'russia indexes');
     t.equal(cover.indexes(russia, limits).length, 259);
     compareFixture(t, russia, limits, __dirname+'/fixtures/russia_out.geojson');
+    verifyCover(t, russia, limits);
     t.end();
 });
 
@@ -215,7 +228,7 @@ test('invalid polygon --- hourglass', function(t) {
 });
 
 test('high zoom', function(t){
-    var building = {"properties":{"osm_id":0},"geometry":{"type":"Polygon","coordinates":[[[-77.04474940896034,38.90019399459534],[-77.04473063349724,38.90019399459534],[-77.04473063349724,38.90027122854152],[-77.04474672675133,38.900273315944304],[-77.04474672675133,38.900457007149065],[-77.04394474625587,38.90017520794709],[-77.04394206404686,38.900173120541425],[-77.04384550452232,38.9001710331357],[-77.04384550452232,38.900141809449025],[-77.04365238547325,38.90007501240577],[-77.04365238547325,38.89989340762676],[-77.04371139407158,38.899916369176196],[-77.04371139407158,38.89986209641103],[-77.04369261860847,38.89986209641103],[-77.04369261860847,38.89969927786663],[-77.04452946782112,38.89969719044697],[-77.04460456967354,38.89967214140626],[-77.04460725188255,38.89969510302724],[-77.04474672675133,38.89969719044697],[-77.04474940896034,38.90019399459534],[-77.04474940896034,38.90019399459534],[-77.04474940896034,38.90019399459534]]]},"type":"Feature"};
+    var building = {"type":"Feature", "geometry":{"type":"Polygon","coordinates":[[[-77.04474940896034,38.90019399459534],[-77.04473063349724,38.90019399459534],[-77.04473063349724,38.90027122854152],[-77.04474672675133,38.900273315944304],[-77.04474672675133,38.900457007149065],[-77.04394474625587,38.90017520794709],[-77.04394206404686,38.900173120541425],[-77.04384550452232,38.9001710331357],[-77.04384550452232,38.900141809449025],[-77.04365238547325,38.90007501240577],[-77.04365238547325,38.89989340762676],[-77.04371139407158,38.899916369176196],[-77.04371139407158,38.89986209641103],[-77.04369261860847,38.89986209641103],[-77.04369261860847,38.89969927786663],[-77.04452946782112,38.89969719044697],[-77.04460456967354,38.89967214140626],[-77.04460725188255,38.89969510302724],[-77.04474672675133,38.89969719044697],[-77.04474940896034,38.90019399459534],[-77.04474940896034,38.90019399459534],[-77.04474940896034,38.90019399459534]]]}, "properties":{"osm_id":0}};
     building = building.geometry;
 
     var limits = {
@@ -227,6 +240,7 @@ test('high zoom', function(t){
     t.ok(cover.tiles(building, limits).length, 'building tiles');
     t.ok(cover.indexes(building, limits).length, 'building indexes');
     compareFixture(t, building, limits, __dirname+'/fixtures/highzoom_out.geojson');
+    verifyCover(t, building, limits);
     t.end();
 });
 
@@ -241,6 +255,7 @@ test('small polygon', function(t){
     t.ok(cover.tiles(building, limits).length, 'small_poly tiles');
     t.ok(cover.indexes(building, limits).length, 'small_poly indexes');
     compareFixture(t, building, limits, __dirname+'/fixtures/small_poly_out.geojson');
+    verifyCover(t, building, limits);
     t.end();
 });
 
@@ -255,6 +270,7 @@ test('spiked polygon', function(t){
     t.ok(cover.tiles(spiked, limits).length, 'spiked tiles');
     t.ok(cover.indexes(spiked, limits).length, 'spiked indexes');
     compareFixture(t, spiked, limits, __dirname+'/fixtures/spiked_out.geojson');
+    verifyCover(t, spiked, limits);
     t.end();
 });
 
@@ -269,23 +285,44 @@ test('blocky polygon', function(t){
     t.ok(cover.tiles(blocky, limits).length, 'blocky tiles');
     t.equal(cover.indexes(blocky, limits).length, 31, 'blocky indexes');
     compareFixture(t, blocky, limits, __dirname+'/fixtures/blocky_out.geojson');
+    verifyCover(t, blocky, limits);
     t.end();
 });
 
-function f(g, name){
-    return {
-        type:'Feature',
-        properties: {name: name},
-        geometry: g
+test('pyramid polygon', function(t){
+    var pyramid = JSON.parse(fs.readFileSync(__dirname+'/fixtures/pyramid.geojson'));
+    var limits = {
+        min_zoom: 10,
+        max_zoom: 10
     };
-}
+
+    t.ok(cover.geojson(pyramid, limits), 'pyramid geojson');
+    t.ok(cover.tiles(pyramid, limits).length, 'pyramid tiles');
+    compareFixture(t, pyramid, limits, __dirname+'/fixtures/pyramid_out.geojson');
+    verifyCover(t, pyramid, limits);
+    t.end();
+});
+
+test('tetris polygon', function(t){
+    var tetris = JSON.parse(fs.readFileSync(__dirname+'/fixtures/tetris.geojson'));
+    var limits = {
+        min_zoom: 10,
+        max_zoom: 10
+    };
+
+    t.ok(cover.geojson(tetris, limits), 'tetris geojson');
+    t.ok(cover.tiles(tetris, limits).length, 'tetris tiles');
+    compareFixture(t, tetris, limits, __dirname+'/fixtures/tetris_out.geojson');
+    verifyCover(t, tetris, limits);
+    t.end();
+});
 
 function compareFixture(t, geom, limits, filepath) {
     var result = cover.geojson(geom, limits);
     result.features.push({
         type: 'Feature',
-        properties: {name:'original', stroke:'#f44', fill:'#f44'},
-        geometry: geom
+        geometry: geom,
+        properties: {name:'original', stroke:'#f44', fill:'#f44'}
     });
     // Sort features to ensure changes such that changes to tile cover
     // order is not considered significant.
@@ -314,3 +351,18 @@ function roundify(key, val) {
     return parseFloat(val.toFixed(8));
 }
 
+function verifyCover(t, geom, limits) {
+    var tiles = cover.geojson(geom, limits);
+    // every tile should have something inside of it
+    var emptyTile = false;
+    tiles.features.forEach(function(tile){ // 'tile' is one feature object
+        var overlap = intersect(tile, geom);
+        if(overlap === []) emptyTile = true;
+    });
+    if(emptyTile) t.fail('Empty tile found');
+
+    // there should be no geometry not covered by a tile
+    var mergedTiles = merge(tiles);
+    var knockout = erase(geom, mergedTiles);
+    t.deepEqual(knockout, [], 'Cover left no exposed geometry');
+}
