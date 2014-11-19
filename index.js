@@ -150,7 +150,7 @@ function polyRingCover(tileHash, ring, max_zoom) {
                 }
             } else if (intersection !== false) {
                 // non-horizontal intersection
-                intersections.push([Math.floor(intersection[0]), Math.floor(intersection[1])]);
+                intersections.push([Math.round(intersection[0]), Math.round(intersection[1])]);
             }
         }
 
