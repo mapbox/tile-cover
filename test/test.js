@@ -372,12 +372,12 @@ function verifyCover(t, geom, limits) {
     var emptyTile = false;
     tiles.features.forEach(function(tile){ // 'tile' is one feature object
         var overlap = intersect(tile, geom);
-        if(overlap === []) emptyTile = true;
+        if(!overlap) emptyTile = true;
     });
     if(emptyTile) t.fail('Empty tile found');
 
     // there should be no geometry not covered by a tile
     var mergedTiles = merge(tiles);
     var knockout = erase(geom, mergedTiles);
-    t.deepEqual(knockout, [], 'Cover left no exposed geometry');
+    t.deepEqual(knockout, undefined, 'Cover left no exposed geometry');
 }

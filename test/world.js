@@ -27,7 +27,7 @@ test('the world', function(t){
         var emptyTile = false;
         countryTiles.forEach(function(tile){ // 'tile' is one feature object
             var overlap = intersect(tile, countryGeom);
-            if(overlap === []) emptyTile = true;
+            if(!overlap) emptyTile = true;
         });
         if(emptyTile) t.fail('Empty tile not found');
 
@@ -36,7 +36,7 @@ test('the world', function(t){
         if(!countryBlock) t.fail('Tile merge failed');
         
         var knockout = erase(country.features[0], countryBlock);
-        t.deepEqual(knockout, [], 'Cover left no exposed geometry');
+        t.deepEqual(knockout, undefined, 'Cover left no exposed geometry');
 
         compareFixture(t, countryGeom, limits, __dirname+'/fixtures/world/'+countryName.split('.')[0]+'_out.geojson');
     });

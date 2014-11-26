@@ -28,11 +28,11 @@
   "devDependencies": {
     "benchmark": "^1.0.0",
     "tape": "^3.0.3",
-    "turf-erase": "^1.1.0",
-    "turf-intersect": "1.2.0",
+    "turf-erase": "^1.2.0",
+    "turf-intersect": "1.3.0",
     "turf-merge": "0.0.2"
   },
   "dependencies": {
-    "tilebelt": "^0.6.1"
+    "tilebelt": "^0.7.0"
   }
 }
