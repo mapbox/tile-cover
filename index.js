@@ -347,21 +347,6 @@ function lineCover(tileHash, coords, max_zoom) {
     }
 }
 
-function pointToTileFraction (lon, lat, z) {
-    var tile = tilebelt.pointToTile(lon, lat, z);
-    var bbox = tilebelt.tileToBBOX(tile);
-
-    var xTileOffset = bbox[2] - bbox[0];
-    var xPointOffset = lon - bbox[0];
-    var xPercentOffset = xPointOffset / xTileOffset;
-
-    var yTileOffset = bbox[1] - bbox[3];
-    var yPointOffset = lat - bbox[3];
-    var yPercentOffset = yPointOffset / yTileOffset;
-
-    return [tile[0]+xPercentOffset, tile[1]+yPercentOffset];
-}
-
 function hashToArray(hash) {
     var keys = Object.keys(hash);
     var tiles = [];
