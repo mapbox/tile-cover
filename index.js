@@ -310,8 +310,8 @@ function lineIntersects(line1StartX, line1StartY, line1EndX, line1EndY, line2Sta
 
 function lineCover(tileHash, coords, max_zoom) {
     for (var i = 0; i < coords.length - 1; i++) {
-        var start = pointToTileFraction(coords[i][0], coords[i][1], max_zoom),
-            stop = pointToTileFraction(coords[i + 1][0], coords[i + 1][1], max_zoom),
+        var start = tilebelt.pointToTileFraction(coords[i][0], coords[i][1], max_zoom),
+            stop = tilebelt.pointToTileFraction(coords[i + 1][0], coords[i + 1][1], max_zoom),
             x0 = start[0],
             y0 = start[1],
             x1 = stop[0],
