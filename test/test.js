@@ -186,6 +186,22 @@ test('russia', function(t){
     t.end();
 });
 
+
+test('degenerate ring', function(t){
+    var fixture = JSON.parse(fs.readFileSync(__dirname+'/fixtures/degenring.geojson'));
+    var limits = {
+        min_zoom: 11,
+        max_zoom: 11
+    };
+
+    t.ok(cover.geojson(fixture, limits), 'geojson');
+    t.ok(cover.tiles(fixture, limits).length, 'tiles');
+    t.ok(cover.indexes(fixture, limits).length, 'indexes');
+    compareFixture(t, fixture, limits, __dirname+'/fixtures/degenring_out.geojson');
+    verifyCover(t, fixture, limits);
+    t.end();
+});
+
 test('invalid polygon --- hourglass', function(t) {
     var invalid = {
     "type": "Polygon",
