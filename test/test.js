@@ -191,7 +191,7 @@ test('degenerate ring', function(t){
     var fixture = JSON.parse(fs.readFileSync(__dirname+'/fixtures/degenring.geojson'));
     var limits = {
         min_zoom: 11,
-        max_zoom: 11
+        max_zoom: 15
     };
 
     t.ok(cover.geojson(fixture, limits), 'geojson');
