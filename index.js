@@ -1,5 +1,15 @@
 var tilebelt = require('tilebelt');
 
+/**
+ * Given a geometry, create cells and return them in a format easily readable
+ * by any software that reads GeoJSON.
+ *
+ * @alias geojson
+ * @param {Object} geom GeoJSON geometry
+ * @param {Object} limits an object with min_zoom and max_zoom properties
+ * specifying the minimum and maximum level to be tiled.
+ * @returns {Object} FeatureCollection of cells formatted as GeoJSON Features
+ */
 module.exports.geojson = function (geom, limits) {
     var locked = getLocked(geom, limits);
     var tileFeatures = locked.map(function (t) {
@@ -7,7 +17,7 @@ module.exports.geojson = function (geom, limits) {
             type: 'Feature',
             geometry: tilebelt.tileToGeoJSON(t),
             properties: {}
-        }
+        };
     });
     return {
         type: 'FeatureCollection',
@@ -15,11 +25,32 @@ module.exports.geojson = function (geom, limits) {
     };
 };
 
+/**
+ * Given a geometry, create cells and return them in their raw form,
+ * as an array of cell identifiers.
+ *
+ * @alias tiles
+ * @param {Object} geom GeoJSON geometry
+ * @param {Object} limits an object with min_zoom and max_zoom properties
+ * specifying the minimum and maximum level to be tiled.
+ * @returns {Array<Array<number>>} An array of tiles given as [x, y, z] arrays
+ */
 module.exports.tiles = function (geom, limits) {
     var locked = getLocked(geom, limits);
     return locked;
 };
 
+
+/**
+ * Given a geometry, create cells and return them as
+ * [quadkey](http://msdn.microsoft.com/en-us/library/bb259689.aspx) indexes.
+ *
+ * @alias indexes
+ * @param {Object} geom GeoJSON geometry
+ * @param {Object} limits an object with min_zoom and max_zoom properties
+ * specifying the minimum and maximum level to be tiled.
+ * @returns {Array<String>} An array of tiles given as quadkeys.
+ */
 module.exports.indexes = function (geom, limits) {
     var locked = getLocked(geom, limits);
     return locked.map(function (tile) {
@@ -29,6 +60,7 @@ module.exports.indexes = function (geom, limits) {
 
 function getLocked (geom, limits) {
     var locked,
+        i,
         tileHash = {};
 
     if (geom.type === 'Point') {
@@ -36,7 +68,7 @@ function getLocked (geom, limits) {
     } else if (geom.type === 'MultiPoint') {
         var quadkeys = {};
         locked = [];
-        for(var i = 0; i < geom.coordinates.length; i++) {
+        for(i = 0; i < geom.coordinates.length; i++) {
             var tile = tilebelt.pointToTile(geom.coordinates[i][0], geom.coordinates[i][1], limits.max_zoom);
             var quadkey = tilebelt.tileToQuadkey(tile);
             if(!quadkeys[quadkey]) {
@@ -48,14 +80,14 @@ function getLocked (geom, limits) {
         lineCover(tileHash, geom.coordinates, limits.max_zoom);
 
     } else if (geom.type === 'MultiLineString') {
-        for(var i = 0; i < geom.coordinates.length; i++) {
+        for(i = 0; i < geom.coordinates.length; i++) {
             lineCover(tileHash, geom.coordinates[i], limits.max_zoom);
         }
     } else if (geom.type === 'Polygon') {
         polyRingCover(tileHash, geom.coordinates, limits.max_zoom);
 
     } else if (geom.type === 'MultiPolygon') {
-        for(var i = 0; i < geom.coordinates.length; i++) {
+        for(i = 0; i < geom.coordinates.length; i++) {
             polyRingCover(tileHash, geom.coordinates[i], limits.max_zoom);
         }
     } else {
