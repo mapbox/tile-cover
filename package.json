@@ -29,13 +29,14 @@
   "devDependencies": {
     "benchmark": "^1.0.0",
     "dox": "^0.6.1",
-    "doxme": "^1.0.0",
-    "tape": "^3.0.3",
-    "turf-erase": "^1.2.0",
-    "turf-intersect": "1.3.0",
-    "turf-merge": "0.0.2"
+    "doxme": "^1.8.2",
+    "tape": "^3.5.0",
+    "turf-area": "^1.1.1",
+    "turf-erase": "^1.3.2",
+    "turf-intersect": "1.4.2",
+    "turf-merge": "1.0.2"
   },
   "dependencies": {
-    "tilebelt": "^0.7.0"
+    "tilebelt": "^0.7.1"
   }
 }

@@ -1,8 +1,9 @@
 var cover = require('../'),
     test = require('tape'),
-    intersect = require('turf-intersect');
-    merge = require('turf-merge');
-    erase = require('turf-erase');
+    intersect = require('turf-intersect'),
+    merge = require('turf-merge'),
+    erase = require('turf-erase'),
+    area = require('turf-area'),
     fs = require('fs');
 
 var REGEN = process.env.REGEN;
@@ -395,5 +396,9 @@ function verifyCover(t, geom, limits) {
     // there should be no geometry not covered by a tile
     var mergedTiles = merge(tiles);
     var knockout = erase(geom, mergedTiles);
-    t.deepEqual(knockout, undefined, 'Cover left no exposed geometry');
+    if(knockout) {
+        // get area of overflow in meters
+        var uncoveredArea = area(knockout);
+        if(uncoveredArea > 0.001) t.fail('geometry left uncovered by tiles');
+    } else t.pass('tile-cover covers geometry');
 }
