@@ -153,34 +153,21 @@ function polyRingCover(tileHash, geom, max_zoom) {
         var intersections = [];
         for(var r = 0; r < tiled.geom.length; r++) {
             var ring = tiled.geom[r];
-            for(var i = 0; i < ring.length; i++) {
-                var curr = ring[i];
-                var next = ring[i+1] || ring[0];
-                var localMin = isLocalMin(i, ring);
-                var localMax = isLocalMax(i, ring);
-                var intersection = lineIntersects(
-                    0, y,
-                    1, y,
-                    curr[0], curr[1],
-                    next[0], next[1],
-                    localMin || localMax);
-                if (intersection) {
-                    intersections.push([Math.round(intersection[0]), Math.round(intersection[1]), r, i, 'nonhoriz', localMin, localMax]);
+            for(var i = 0, len = ring.length, j = len - 1; i < len; j = i++) {
+                var intersection = intersectY(ring[j], ring[i], y, isLocalMin(j, ring) || isLocalMax(j, ring));
+                if (intersection !== null) {
+                    intersections.push(Math.round(intersection));
                 }
             }
         }
-        // sort intersections by x
-        intersections.sort(compareX);
+        // sort intersections
+        intersections.sort(compareNum);
         // add tiles between intersection pairs
-        for(var i = 0; i < intersections.length - 1; i++) {
-            if(i % 2 === 0){
-                var enter = intersections[i][0];
-                var exit = intersections[i+1][0];
-                var x = enter;
-                while (x <= exit) {
-                    tileHash[toID(x, y, max_zoom)] = true;
-                    x++;
-                }
+        for(var i = 0; i < intersections.length - 1; i += 2) {
+            var x = intersections[i];
+            while (x <= intersections[i+1]) {
+                tileHash[toID(x, y, max_zoom)] = true;
+                x++;
             }
         }
         y++;
@@ -191,12 +178,13 @@ function polyRingCover(tileHash, geom, max_zoom) {
     }
 }
 
-function compareX(a, b) {
-    return a[0] - b[0];
+function compareNum(a, b) {
+    return a - b;
 }
 
 module.exports.getTiledPoly = getTiledPoly;
-function getTiledPoly(geom, max_zoom, latlon) {
+
+function getTiledPoly(geom, max_zoom) {
     var minY = Infinity;
     var maxY = -Infinity;
     var tiled = [];
@@ -204,18 +192,11 @@ function getTiledPoly(geom, max_zoom, latlon) {
     var last;
     for(var i = 0; i < geom.length; i++) {
         tiledRing = [];
-        last = [];
+        last = null;
         for(var k = 0; k < geom[i].length; k++) {
             var next = tilebelt.pointToTile(geom[i][k][0], geom[i][k][1], max_zoom);
-            if (latlon) {
-                var bbox = tilebelt.tileToBBOX(next, max_zoom);
-                next = [
-                    bbox[0] + (bbox[2]-bbox[0])*0.5,
-                    bbox[1] + (bbox[3]-bbox[1])*0.5,
-                ];
-            }
             // Degenerate segment
-            if (last[0] === next[0] && last[1] === next[1]) continue;
+            if (last && last[0] === next[0] && last[1] === next[1]) continue;
             minY = Math.min(minY, next[1]);
             maxY = Math.max(maxY, next[1]);
             tiledRing.push(next);
@@ -230,58 +211,6 @@ function getTiledPoly(geom, max_zoom, latlon) {
         geom: tiled
     };
 }
-
-/*
-// Convert a set of rings into segments connecting tile coordinates.
-// Drops degenerate segments and merges sequential horizontal segments.
-module.exports.getTileSegments = getTileSegments;
-function getTileSegments(ring, max_zoom) {
-    // construct segments
-    var segments = [];
-    var last = null;
-    var start;
-    var end;
-    ring = getTiledRing(ring, max_zoom);
-
-    for(var i = 0; i < ring.length; i++) {
-        for(var k = 0; k < ring[i].length - 1; k++) {
-            start = ring[i][k];
-            end = ring[i][k+1];
-
-            // Degenerate segment (start === end). Skip.
-            if (start[0] === end[0] && start[1] === end[1]) {
-                continue;
-            // Horizontal segment that continues previous horizontal segment. Merge.
-            } else if (last &&
-                // last seg is horizontal
-                last[0][1] === last[1][1] &&
-                // current seg continues horizontal
-                last[0][1] === start[1] && last[1][1] === end[1] &&
-                // merging does not lead to a degenerate horizontal
-                last[0][0] !== end[0]
-            ) {
-                last[1] = end;
-            // Vertical segment that continues previous vertical segment. Merge.
-            } else if (last &&
-                // last seg is vertical
-                last[0][0] === last[1][0] &&
-                // current seg continues vertical
-                last[0][0] === start[0] && last[1][0] === end[0] &&
-                // merging does not lead to a degenerate vertical
-                last[0][1] !== end[1]
-            ) {
-                last[1] = end;
-            // Add in new segment.
-            } else {
-                last = [ start, end ];
-                segments.push(last);
-            }
-        }
-        last = null;
-    }
-    return segments;
-}
-*/
 
 // Determines if the end y value of segment @ i is a local minima.
 // If the segment is horizontal will continue iterating through next
@@ -335,45 +264,13 @@ function isLocalMax(i, ring) {
     return curr[1] > next[1];
 }
 
-// modified from http://jsfiddle.net/justin_c_rounds/Gd2S2/light/
-// line1 is an infinite line, and line2 is a finite segment
-function lineIntersects(line1StartX, line1StartY, line1EndX, line1EndY, line2StartX, line2StartY, line2EndX, line2EndY, localMinMax) {
-    var denominator,
-        a,
-        b,
-        numerator1,
-        numerator2,
-        onLine1= false,
-        onLine2= false,
-        res = [null, null];
+function intersectY(a, b, y, localMinMax) {
+    if ((a[1] === b[1]) ||
+        (a[1] > y && b[1] > y) ||
+        (a[1] < y && b[1] < y) ||
+        (!localMinMax && b[1] === y)) return null;
 
-    denominator = ((line2EndY - line2StartY) * (line1EndX - line1StartX)) - ((line2EndX - line2StartX) * (line1EndY - line1StartY));
-    if (denominator === 0) {
-        if(res[0] !== null && res[1] !== null) {
-            return res;
-        } else {
-            return false;
-        }
-    }
-    a = line1StartY - line2StartY;
-    b = line1StartX - line2StartX;
-    numerator1 = ((line2EndX - line2StartX) * a) - ((line2EndY - line2StartY) * b);
-    numerator2 = ((line1EndX - line1StartX) * a) - ((line1EndY - line1StartY) * b);
-    a = numerator1 / denominator;
-    b = numerator2 / denominator;
-
-    // if we cast these lines infinitely in both directions, they intersect here:
-    res[0] = line1StartX + (a * (line1EndX - line1StartX));
-    res[1] = line1StartY + (a * (line1EndY - line1StartY));
-
-    // if line2 is a segment and line1 is infinite, they intersect if:
-    if ((b > 0 && b < 1) ||
-        (res[0] === line2StartX && res[1] === line2StartY) ||
-        (localMinMax && res[0] === line2EndX && res[1] === line2EndY)) {
-        return res;
-    } else {
-        return false;
-    }
+    return (y - a[1]) * (b[0] - a[0]) / (b[1] - a[1]) + a[0];
 }
 
 function lineCover(tileHash, coords, max_zoom) {
