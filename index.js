@@ -52,49 +52,48 @@ exports.indexes = function (geom, limits) {
 };
 
 function getTiles(geom, limits) {
-    var locked, i, tile, id,
+    var tiles, i, tile, id,
         coords = geom.coordinates,
+        maxZoom = limits.max_zoom,
         tileHash = {};
 
     if (geom.type === 'Point') {
-        locked = [tilebelt.pointToTile(coords[0], coords[1], limits.max_zoom)];
+        tiles = [tilebelt.pointToTile(coords[0], coords[1], maxZoom)];
 
     } else if (geom.type === 'MultiPoint') {
-        locked = [];
+        tiles = [];
         for (i = 0; i < coords.length; i++) {
-            tile = tilebelt.pointToTile(coords[i][0], coords[i][1], limits.max_zoom);
+            tile = tilebelt.pointToTile(coords[i][0], coords[i][1], maxZoom);
             id = toID(tile[0], tile[1], tile[2]);
             if (!tileHash[id]) {
                 tileHash[id] = true;
-                locked.push(tile);
+                tiles.push(tile);
             }
         }
     } else if (geom.type === 'LineString') {
-        lineCover(tileHash, coords, limits.max_zoom);
+        lineCover(tileHash, coords, maxZoom);
 
     } else if (geom.type === 'MultiLineString') {
         for (i = 0; i < coords.length; i++) {
-            lineCover(tileHash, coords[i], limits.max_zoom);
+            lineCover(tileHash, coords[i], maxZoom);
         }
     } else if (geom.type === 'Polygon') {
-        polygonCover(tileHash, coords, limits.max_zoom);
+        polygonCover(tileHash, coords, maxZoom);
 
     } else if (geom.type === 'MultiPolygon') {
         for (i = 0; i < coords.length; i++) {
-            polygonCover(tileHash, coords[i], limits.max_zoom);
+            polygonCover(tileHash, coords[i], maxZoom);
         }
     } else {
         throw new Error('Geometry type not implemented');
     }
 
-    if (!locked) {
-        if (limits.min_zoom !== limits.max_zoom) {
-            tileHash = mergeTiles(tileHash, limits);
-        }
-        locked = hashToArray(tileHash);
+    if (!tiles) {
+        if (limits.min_zoom !== maxZoom) tileHash = mergeTiles(tileHash, limits);
+        tiles = hashToArray(tileHash);
     }
 
-    return locked;
+    return tiles;
 }
 
 function mergeTiles(tileHash, limits) {
@@ -127,9 +126,7 @@ function mergeTiles(tileHash, limits) {
         }
 
         for (i = 0; i < keys.length; i++) {
-            if (tileHash[keys[i]]) {
-                mergedTileHash[+keys[i]] = true;
-            }
+            if (tileHash[keys[i]]) mergedTileHash[+keys[i]] = true;
         }
 
         tileHash = parentTileHash;
@@ -138,12 +135,12 @@ function mergeTiles(tileHash, limits) {
     return mergedTileHash;
 }
 
-function polygonCover(tileHash, geom, max_zoom) {
+function polygonCover(tileHash, geom, maxZoom) {
     var intersections = [];
 
     for (var i = 0; i < geom.length; i++) {
         var ring = [];
-        lineCover(tileHash, geom[i], max_zoom, ring);
+        lineCover(tileHash, geom[i], maxZoom, ring);
 
         for (var j = 0, len = ring.length, k = len - 1; j < len; k = j++) {
             var m = (j + 1) % len;
@@ -156,26 +153,26 @@ function polygonCover(tileHash, geom, max_zoom) {
         }
     }
 
-    intersections.sort(compareTopLeft); // sort by y, then x
+    intersections.sort(compareTiles); // sort by y, then x
 
     for (i = 0; i < intersections.length; i += 2) {
         // fill tiles between pairs of intersections
         for (var x = intersections[i][0] + 1; x < intersections[i + 1][0]; x++) {
-            tileHash[toID(x, intersections[i][1], max_zoom)] = true;
+            tileHash[toID(x, intersections[i][1], maxZoom)] = true;
         }
     }
 }
 
-function compareTopLeft(a, b) {
+function compareTiles(a, b) {
     return (a[1] - b[1]) || (a[0] - b[0]);
 }
 
-function lineCover(tileHash, coords, max_zoom, ring) {
+function lineCover(tileHash, coords, maxZoom, ring) {
     var prevX, prevY;
 
     for (var i = 0; i < coords.length - 1; i++) {
-        var start = tilebelt.pointToTileFraction(coords[i][0], coords[i][1], max_zoom),
-            stop = tilebelt.pointToTileFraction(coords[i + 1][0], coords[i + 1][1], max_zoom),
+        var start = tilebelt.pointToTileFraction(coords[i][0], coords[i][1], maxZoom),
+            stop = tilebelt.pointToTileFraction(coords[i + 1][0], coords[i + 1][1], maxZoom),
             x0 = start[0],
             y0 = start[1],
             x1 = stop[0],
@@ -195,8 +192,8 @@ function lineCover(tileHash, coords, max_zoom, ring) {
             tdy = Math.abs(sy / dy);
 
         if (x !== prevX || y !== prevY) {
-            tileHash[toID(x, y, max_zoom)] = true;
-            if (ring && y !== prevY) ring.push([x, y, max_zoom]);
+            tileHash[toID(x, y, maxZoom)] = true;
+            if (ring && y !== prevY) ring.push([x, y, maxZoom]);
             prevX = x;
             prevY = y;
         }
@@ -209,14 +206,14 @@ function lineCover(tileHash, coords, max_zoom, ring) {
                 tMaxY += tdy;
                 y += sy;
             }
-            tileHash[toID(x, y, max_zoom)] = true;
-            if (ring && y !== prevY) ring.push([x, y, max_zoom]);
+            tileHash[toID(x, y, maxZoom)] = true;
+            if (ring && y !== prevY) ring.push([x, y, maxZoom]);
             prevX = x;
             prevY = y;
         }
     }
 
-    if (ring && ring[ring.length - 1][1] === ring[0][1]) ring.pop();
+    if (ring && y === ring[0][1]) ring.pop();
 }
 
 function hashToArray(hash) {
