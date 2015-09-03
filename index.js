@@ -275,6 +275,8 @@ function intersectY(a, b, y, localMinMax) {
 }
 
 function lineCover(tileHash, coords, max_zoom) {
+    var prevX, prevY;
+
     for (var i = 0; i < coords.length - 1; i++) {
         var start = tilebelt.pointToTileFraction(coords[i][0], coords[i][1], max_zoom),
             stop = tilebelt.pointToTileFraction(coords[i + 1][0], coords[i + 1][1], max_zoom),
@@ -283,30 +285,34 @@ function lineCover(tileHash, coords, max_zoom) {
             x1 = stop[0],
             y1 = stop[1],
             dx = x1 - x0,
-            dy = y1 - y0,
-            sx = dx > 0 ? 1 : -1,
+            dy = y1 - y0;
+
+        if (dy === 0 && dx === 0) continue;
+
+        var sx = dx > 0 ? 1 : -1,
             sy = dy > 0 ? 1 : -1,
             x = Math.floor(x0),
             y = Math.floor(y0),
-            tMaxX = Math.abs(((dx > 0 ? 1 : 0) + x - x0) / dx),
-            tMaxY = Math.abs(((dy > 0 ? 1 : 0) + y - y0) / dy),
+            tMaxX = dx === 0 ? Infinity : Math.abs(((dx > 0 ? 1 : 0) + x - x0) / dx),
+            tMaxY = dy === 0 ? Infinity : Math.abs(((dy > 0 ? 1 : 0) + y - y0) / dy),
             tdx = Math.abs(sx / dx),
             tdy = Math.abs(sy / dy);
 
-        tileHash[toID(x, y, max_zoom)] = true;
-
-        // handle edge cases
-        if (dy === 0 && dx === 0) continue;
-        if (isNaN(tMaxX)) tMaxX = Infinity;
-        if (isNaN(tMaxY)) tMaxY = Infinity;
+        if (x !== prevX || y !== prevY) {
+            tileHash[toID(x, y, max_zoom)] = true;
+            prevX = x;
+            prevY = y;
+        }
 
         while (tMaxX < 1 || tMaxY < 1) {
             if (tMaxX < tMaxY) {
                 tMaxX += tdx;
                 x += sx;
+                prevX = x;
             } else {
                 tMaxY += tdy;
                 y += sy;
+                prevY = y;
             }
             tileHash[toID(x, y, max_zoom)] = true;
         }
