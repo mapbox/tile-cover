@@ -10,7 +10,7 @@ var tilebelt = require('tilebelt');
  * specifying the minimum and maximum level to be tiled.
  * @returns {Object} FeatureCollection of cells formatted as GeoJSON Features
  */
-module.exports.geojson = function (geom, limits) {
+exports.geojson = function (geom, limits) {
     var locked = getLocked(geom, limits);
     var tileFeatures = locked.map(function (t) {
         return {
@@ -35,7 +35,7 @@ module.exports.geojson = function (geom, limits) {
  * specifying the minimum and maximum level to be tiled.
  * @returns {Array<Array<number>>} An array of tiles given as [x, y, z] arrays
  */
-module.exports.tiles = function (geom, limits) {
+exports.tiles = function (geom, limits) {
     var locked = getLocked(geom, limits);
     return locked;
 };
@@ -51,7 +51,7 @@ module.exports.tiles = function (geom, limits) {
  * specifying the minimum and maximum level to be tiled.
  * @returns {Array<String>} An array of tiles given as quadkeys.
  */
-module.exports.indexes = function (geom, limits) {
+exports.indexes = function (geom, limits) {
     var locked = getLocked(geom, limits);
     return locked.map(function (tile) {
         return tilebelt.tileToQuadkey(tile);
@@ -182,7 +182,7 @@ function compareNum(a, b) {
     return a - b;
 }
 
-module.exports.getTiledPoly = getTiledPoly;
+exports.getTiledPoly = getTiledPoly;
 
 function getTiledPoly(geom, max_zoom) {
     var minY = Infinity;
@@ -223,8 +223,8 @@ function getTiledPoly(geom, max_zoom) {
 //    \ /                             ^        ^------------next
 //     x <-------- local minima       +-----local minima
 //
-module.exports.isLocalMin = isLocalMin;
-module.exports.isLocalMax = isLocalMax;
+exports.isLocalMin = isLocalMin;
+exports.isLocalMax = isLocalMax;
 
 function isLocalMin(i, ring) {
     var mod = ring.length;
