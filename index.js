@@ -58,7 +58,7 @@ exports.indexes = function (geom, limits) {
     });
 };
 
-function getLocked (geom, limits) {
+function getLocked(geom, limits) {
     var locked, i, tile, id,
         coords = geom.coordinates,
         tileHash = {};
@@ -68,7 +68,7 @@ function getLocked (geom, limits) {
 
     } else if (geom.type === 'MultiPoint') {
         locked = [];
-        for(i = 0; i < coords.length; i++) {
+        for (i = 0; i < coords.length; i++) {
             tile = tilebelt.pointToTile(coords[i][0], coords[i][1], limits.max_zoom);
             id = toID(tile[0], tile[1], tile[2]);
             if (!tileHash[id]) {
@@ -80,14 +80,14 @@ function getLocked (geom, limits) {
         lineCover(tileHash, coords, limits.max_zoom);
 
     } else if (geom.type === 'MultiLineString') {
-        for(i = 0; i < coords.length; i++) {
+        for (i = 0; i < coords.length; i++) {
             lineCover(tileHash, coords[i], limits.max_zoom);
         }
     } else if (geom.type === 'Polygon') {
         polyRingCover(tileHash, coords, limits.max_zoom);
 
     } else if (geom.type === 'MultiPolygon') {
-        for(i = 0; i < coords.length; i++) {
+        for (i = 0; i < coords.length; i++) {
             polyRingCover(tileHash, coords[i], limits.max_zoom);
         }
     } else {
@@ -95,7 +95,7 @@ function getLocked (geom, limits) {
     }
 
     if (!locked) {
-        if (limits.min_zoom !== limits.max_zoom){
+        if (limits.min_zoom !== limits.max_zoom) {
             tileHash = mergeTiles(tileHash, limits);
         }
         locked = hashToArray(tileHash);
@@ -133,7 +133,7 @@ function mergeTiles(tileHash, limits) {
             }
         }
 
-        for (var i = 0; i < keys.length; i++) {
+        for (i = 0; i < keys.length; i++) {
             if (tileHash[keys[i]]) {
                 mergedTileHash[+keys[i]] = true;
             }
@@ -148,12 +148,14 @@ function mergeTiles(tileHash, limits) {
 function polyRingCover(tileHash, geom, max_zoom) {
     var tiled = getTiledPoly(geom, max_zoom);
     var y = tiled.minY;
+    var i, j, len;
+
     while (y <= tiled.maxY) {
         // calculate intersections at each tile top-line
         var intersections = [];
-        for(var r = 0; r < tiled.geom.length; r++) {
+        for (var r = 0; r < tiled.geom.length; r++) {
             var ring = tiled.geom[r];
-            for(var i = 0, len = ring.length, j = len - 1; i < len; j = i++) {
+            for (i = 0, len = ring.length, j = len - 1; i < len; j = i++) {
                 var intersection = intersectY(ring[j], ring[i], y, isLocalMin(j, ring) || isLocalMax(j, ring));
                 if (intersection !== null) {
                     intersections.push(Math.round(intersection));
@@ -163,9 +165,9 @@ function polyRingCover(tileHash, geom, max_zoom) {
         // sort intersections
         intersections.sort(compareNum);
         // add tiles between intersection pairs
-        for(var i = 0; i < intersections.length - 1; i += 2) {
+        for (i = 0; i < intersections.length - 1; i += 2) {
             var x = intersections[i];
-            while (x <= intersections[i+1]) {
+            while (x <= intersections[i + 1]) {
                 tileHash[toID(x, y, max_zoom)] = true;
                 x++;
             }
@@ -173,7 +175,7 @@ function polyRingCover(tileHash, geom, max_zoom) {
         y++;
     }
     // add any missing tiles with a segments pass
-    for(var i = 0; i < geom.length; i++) {
+    for (i = 0; i < geom.length; i++) {
         lineCover(tileHash, geom[i], max_zoom);
     }
 }
@@ -188,12 +190,11 @@ function getTiledPoly(geom, max_zoom) {
     var minY = Infinity;
     var maxY = -Infinity;
     var tiled = [];
-    var ring;
     var last;
-    for(var i = 0; i < geom.length; i++) {
-        tiledRing = [];
+    for (var i = 0; i < geom.length; i++) {
+        var tiledRing = [];
         last = null;
-        for(var k = 0; k < geom[i].length; k++) {
+        for (var k = 0; k < geom[i].length; k++) {
             var next = tilebelt.pointToTile(geom[i][k][0], geom[i][k][1], max_zoom);
             // Degenerate segment
             if (last && last[0] === next[0] && last[1] === next[1]) continue;
@@ -229,16 +230,16 @@ exports.isLocalMax = isLocalMax;
 function isLocalMin(i, ring) {
     var mod = ring.length;
     var prev = ring[i];
-    var curr = ring[(i+1) % mod];
-    var next = ring[(i+2) % mod];
+    var curr = ring[(i + 1) % mod];
+    var next = ring[(i + 2) % mod];
 
     // Not min in current segment.
     if (curr[1] >= prev[1]) return false;
 
-    var j = (i+1) % mod;
+    var j = (i + 1) % mod;
     while (j !== i && curr[1] === next[1]) {
-        next = ring[(j+2) % mod];
-        j = (j+1) % mod;
+        next = ring[(j + 2) % mod];
+        j = (j + 1) % mod;
     }
 
     // Min vs next segment.
@@ -248,16 +249,16 @@ function isLocalMin(i, ring) {
 function isLocalMax(i, ring) {
     var mod = ring.length;
     var prev = ring[i];
-    var curr = ring[(i+1) % mod];
-    var next = ring[(i+2) % mod];
+    var curr = ring[(i + 1) % mod];
+    var next = ring[(i + 2) % mod];
 
     // Not max in current segment.
     if (curr[1] <= prev[1]) return false;
 
-    var j = (i+1) % mod;
+    var j = (i + 1) % mod;
     while (j !== i && curr[1] === next[1]) {
-        next = ring[(j+2) % mod];
-        j = (j+1) % mod;
+        next = ring[(j + 2) % mod];
+        j = (j + 1) % mod;
     }
 
     // Min vs next segment.
@@ -315,7 +316,7 @@ function lineCover(tileHash, coords, max_zoom) {
 function hashToArray(hash) {
     var keys = Object.keys(hash);
     var tiles = [];
-    for(var i = 0; i < keys.length; i++) {
+    for (var i = 0; i < keys.length; i++) {
         tiles.push(fromID(+keys[i]));
     }
     return tiles;
