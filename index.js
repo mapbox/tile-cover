@@ -11,19 +11,19 @@ var tilebelt = require('tilebelt');
  * @returns {Object} FeatureCollection of cells formatted as GeoJSON Features
  */
 exports.geojson = function (geom, limits) {
-    var locked = getLocked(geom, limits);
-    var tileFeatures = locked.map(function (t) {
-        return {
-            type: 'Feature',
-            geometry: tilebelt.tileToGeoJSON(t),
-            properties: {}
-        };
-    });
     return {
         type: 'FeatureCollection',
-        features: tileFeatures
+        features: getTiles(geom, limits).map(tileToFeature)
     };
 };
+
+function tileToFeature(t) {
+    return {
+        type: 'Feature',
+        geometry: tilebelt.tileToGeoJSON(t),
+        properties: {}
+    };
+}
 
 /**
  * Given a geometry, create cells and return them in their raw form,
@@ -35,11 +35,7 @@ exports.geojson = function (geom, limits) {
  * specifying the minimum and maximum level to be tiled.
  * @returns {Array<Array<number>>} An array of tiles given as [x, y, z] arrays
  */
-exports.tiles = function (geom, limits) {
-    var locked = getLocked(geom, limits);
-    return locked;
-};
-
+exports.tiles = getTiles;
 
 /**
  * Given a geometry, create cells and return them as
@@ -52,13 +48,10 @@ exports.tiles = function (geom, limits) {
  * @returns {Array<String>} An array of tiles given as quadkeys.
  */
 exports.indexes = function (geom, limits) {
-    var locked = getLocked(geom, limits);
-    return locked.map(function (tile) {
-        return tilebelt.tileToQuadkey(tile);
-    });
+    return getTiles(geom, limits).map(tilebelt.tileToQuadkey);
 };
 
-function getLocked(geom, limits) {
+function getTiles(geom, limits) {
     var locked, i, tile, id,
         coords = geom.coordinates,
         tileHash = {};
