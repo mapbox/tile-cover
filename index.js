@@ -59,36 +59,36 @@ exports.indexes = function (geom, limits) {
 };
 
 function getLocked (geom, limits) {
-    var locked,
-        i,
+    var locked, i, tile, id,
+        coords = geom.coordinates,
         tileHash = {};
 
     if (geom.type === 'Point') {
-        locked = [tilebelt.pointToTile(geom.coordinates[0], geom.coordinates[1], limits.max_zoom)];
+        locked = [tilebelt.pointToTile(coords[0], coords[1], limits.max_zoom)];
+
     } else if (geom.type === 'MultiPoint') {
-        var quadkeys = {};
         locked = [];
-        for(i = 0; i < geom.coordinates.length; i++) {
-            var tile = tilebelt.pointToTile(geom.coordinates[i][0], geom.coordinates[i][1], limits.max_zoom);
-            var quadkey = tilebelt.tileToQuadkey(tile);
-            if(!quadkeys[quadkey]) {
-                quadkeys[quadkey] = true;
+        for(i = 0; i < coords.length; i++) {
+            tile = tilebelt.pointToTile(coords[i][0], coords[i][1], limits.max_zoom);
+            id = toID(tile[0], tile[1], tile[2]);
+            if (!tileHash[id]) {
+                tileHash[id] = true;
                 locked.push(tile);
             }
         }
     } else if (geom.type === 'LineString') {
-        lineCover(tileHash, geom.coordinates, limits.max_zoom);
+        lineCover(tileHash, coords, limits.max_zoom);
 
     } else if (geom.type === 'MultiLineString') {
-        for(i = 0; i < geom.coordinates.length; i++) {
-            lineCover(tileHash, geom.coordinates[i], limits.max_zoom);
+        for(i = 0; i < coords.length; i++) {
+            lineCover(tileHash, coords[i], limits.max_zoom);
         }
     } else if (geom.type === 'Polygon') {
-        polyRingCover(tileHash, geom.coordinates, limits.max_zoom);
+        polyRingCover(tileHash, coords, limits.max_zoom);
 
     } else if (geom.type === 'MultiPolygon') {
-        for(i = 0; i < geom.coordinates.length; i++) {
-            polyRingCover(tileHash, geom.coordinates[i], limits.max_zoom);
+        for(i = 0; i < coords.length; i++) {
+            polyRingCover(tileHash, coords[i], limits.max_zoom);
         }
     } else {
         throw new Error('Geometry type not implemented');
