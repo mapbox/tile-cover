@@ -88,25 +88,22 @@ function getTiles(geom, limits) {
         throw new Error('Geometry type not implemented');
     }
 
-    if (!tiles) {
-        if (limits.min_zoom !== maxZoom) tileHash = mergeTiles(tileHash, limits);
-        tiles = hashToArray(tileHash);
-    }
+    var tiles = hashToArray(tileHash);
 
+    if (limits.min_zoom !== maxZoom) tiles = mergeTiles(tileHash, tiles, limits);
     return tiles;
 }
 
-function mergeTiles(tileHash, limits) {
-    var mergedTileHash = {};
+function mergeTiles(tileHash, tiles, limits) {
+    var mergedTiles = [];
 
     for (var z = limits.max_zoom; z > limits.min_zoom; z--) {
 
-        var keys = Object.keys(tileHash);
         var parentTileHash = {};
+        var parentTiles = [];
 
-        for (var i = 0; i < keys.length; i++) {
-            var id1 = +keys[i],
-                t = fromID(id1);
+        for (var i = 0; i < tiles.length; i++) {
+            var t = tiles[i];
 
             if (t[0] % 2 === 0 && t[1] % 2 === 0) {
                 var id2 = toID(t[0] + 1, t[1], z),
@@ -114,25 +111,32 @@ function mergeTiles(tileHash, limits) {
                     id4 = toID(t[0] + 1, t[1] + 1, z);
 
                 if (tileHash[id2] && tileHash[id3] && tileHash[id4]) {
-                    tileHash[id1] = false;
+                    tileHash[toID(t[0], t[1], t[2])] = false;
                     tileHash[id2] = false;
                     tileHash[id3] = false;
                     tileHash[id4] = false;
 
-                    var parentId = toID(t[0] / 2, t[1] / 2, z - 1);
-                    (z - 1 === limits.min_zoom ? mergedTileHash : parentTileHash)[parentId] = true;
+                    var parentTile = [t[0] / 2, t[1] / 2, z - 1];
+
+                    if (z - 1 === limits.min_zoom) mergedTiles.push(parentTile);
+                    else {
+                        parentTileHash[toID(t[0] / 2, t[1] / 2, z - 1)] = true;
+                        parentTiles.push(parentTile);
+                    }
                 }
             }
         }
 
-        for (i = 0; i < keys.length; i++) {
-            if (tileHash[keys[i]]) mergedTileHash[+keys[i]] = true;
+        for (i = 0; i < tiles.length; i++) {
+            t = tiles[i];
+            if (tileHash[toID(t[0], t[1], t[2])]) mergedTiles.push(t);
         }
 
         tileHash = parentTileHash;
+        tiles = parentTiles;
     }
 
-    return mergedTileHash;
+    return mergedTiles;
 }
 
 function polygonCover(tileHash, geom, maxZoom) {
