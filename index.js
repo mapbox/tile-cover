@@ -52,23 +52,18 @@ exports.indexes = function (geom, limits) {
 };
 
 function getTiles(geom, limits) {
-    var tiles, i, tile, id,
+    var i, tile,
         coords = geom.coordinates,
         maxZoom = limits.max_zoom,
         tileHash = {};
 
     if (geom.type === 'Point') {
-        tiles = [tilebelt.pointToTile(coords[0], coords[1], maxZoom)];
+        return [tilebelt.pointToTile(coords[0], coords[1], maxZoom)];
 
     } else if (geom.type === 'MultiPoint') {
-        tiles = [];
         for (i = 0; i < coords.length; i++) {
             tile = tilebelt.pointToTile(coords[i][0], coords[i][1], maxZoom);
-            id = toID(tile[0], tile[1], tile[2]);
-            if (!tileHash[id]) {
-                tileHash[id] = true;
-                tiles.push(tile);
-            }
+            tileHash[toID(tile[0], tile[1], tile[2])] = true;
         }
     } else if (geom.type === 'LineString') {
         lineCover(tileHash, coords, maxZoom);
