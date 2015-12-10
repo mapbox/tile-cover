@@ -3,7 +3,7 @@ tile-cover
 
 [![Build Status](https://travis-ci.org/mapbox/tile-cover.svg)](https://travis-ci.org/mapbox/tile-cover)
 
-generate the minimum number of tiles to cover a geojson geometry
+Generate the minimum number of tiles to cover a [GeoJSON Geometry](http://geojson.org/geojson-spec.html#geometry-objects).
 
 ### Install
 
@@ -29,7 +29,7 @@ cover.indexes(poly.geom, limits);
 
 ## geojson(geom, limits)
 
-Given a geometry, create cells and return them in a format easily readable by any software that reads GeoJSON.
+Given a [geometry](http://geojson.org/geojson-spec.html#geometry-objects), create cells and return them in a format easily readable by any software that reads GeoJSON.
 
 * `geom` (`Object`): GeoJSON geometry
 * `limits` (`Object`): an object with min_zoom and max_zoom properties specifying the minimum and maximum level to be tiled.
@@ -37,7 +37,7 @@ Given a geometry, create cells and return them in a format easily readable by an
 **Returns** `Object`, FeatureCollection of cells formatted as GeoJSON Features
 ## tiles(geom, limits)
 
-Given a geometry, create cells and return them in their raw form, as an array of cell identifiers.
+Given a [geometry](http://geojson.org/geojson-spec.html#geometry-objects), create cells and return them in their raw form, as an array of cell identifiers.
 
 * `geom` (`Object`): GeoJSON geometry
 * `limits` (`Object`): an object with min_zoom and max_zoom properties specifying the minimum and maximum level to be tiled.
@@ -45,7 +45,7 @@ Given a geometry, create cells and return them in their raw form, as an array of
 **Returns** `Array.<Array.<number>>`, An array of tiles given as [x, y, z] arrays
 ## indexes(geom, limits)
 
-Given a geometry, create cells and return them as quadkey indexes.
+Given a [geometry](http://geojson.org/geojson-spec.html#geometry-objects), create cells and return them as quadkey indexes.
 
 * `geom` (`Object`): GeoJSON geometry
 * `limits` (`Object`): an object with min_zoom and max_zoom properties specifying the minimum and maximum level to be tiled.
