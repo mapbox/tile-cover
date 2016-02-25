@@ -348,6 +348,19 @@ test('0,0 polygon', function(t){
     t.end();
 });
 
+test('china unknown', function(t) {
+    var china = JSON.parse(fs.readFileSync(__dirname+'/fixtures/china_unknown.geojson'));
+    var limits = {
+        min_zoom: 6,
+        max_zoom: 6
+    };
+
+    t.ok(cover.geojson(china, limits), 'china geojson');
+    t.ok(cover.tiles(china, limits).length, 'china tiles');
+    compareFixture(t, china, limits, __dirname+'/fixtures/china_unknown_out.geojson');
+    verifyCover(t, china, limits);
+    t.end();
+});
 
 function compareFixture(t, geom, limits, filepath) {
     var result = cover.geojson(geom, limits);
