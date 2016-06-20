@@ -14,6 +14,7 @@ npm install tile-cover
 ### Usage
 
 ```js
+var cover = require('tile-cover');
 var poly = JSON.parse(fs.readFileSync('./poly.geojson'));
 var limits = {
   	min_zoom: 4,
