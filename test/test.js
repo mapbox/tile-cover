@@ -348,6 +348,16 @@ test('0,0 polygon', function(t){
     t.end();
 });
 
+test('quadkey', function(t){
+    var quadkey = JSON.parse(fs.readFileSync(__dirname+'/fixtures/quadkey.geojson'));
+    var limits = {
+        min_zoom: 20,
+        max_zoom: 20
+    };
+    t.deepEqual(cover.geojson(quadkey.geometry, limits).features[0], quadkey);
+    t.end();
+});
+
 
 function compareFixture(t, geom, limits, filepath) {
     var result = cover.geojson(geom, limits);
