@@ -1,7 +1,7 @@
 tile-cover
 ==========
 
-[![Build Status](https://travis-ci.org/mapbox/tile-cover.svg)](https://travis-ci.org/mapbox/tile-cover)
+[![Build Status](https://travis-ci.org/mapbox/tile-cover.svg?branch=master)](https://travis-ci.org/mapbox/tile-cover)
 
 Generate the minimum number of tiles to cover a [GeoJSON Geometry](http://geojson.org/geojson-spec.html#geometry-objects).
 
@@ -19,7 +19,7 @@ var poly = JSON.parse(fs.readFileSync('./poly.geojson'));
 var limits = {
   	min_zoom: 4,
   	max_zoom: 9
-  }
+};
 
 cover.geojson(poly.geom, limits);
 cover.tiles(poly.geom, limits);
