@@ -1,5 +1,5 @@
 {
-  "name": "tile-cover",
+  "name": "@mapbox/tile-cover",
   "version": "3.0.1",
   "description": "generate the minimum number of tiles to cover a geojson geometry",
   "main": "index.js",
