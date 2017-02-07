@@ -8,13 +8,13 @@ Generate the minimum number of tiles to cover a [GeoJSON Geometry](http://geojso
 ### Install
 
 ```bash
-npm install tile-cover
+npm install @mapbox/tile-cover
 ```
 
 ### Usage
 
 ```js
-var cover = require('tile-cover');
+var cover = require('@mapbox/tile-cover');
 var poly = JSON.parse(fs.readFileSync('./poly.geojson'));
 var limits = {
   	min_zoom: 4,
