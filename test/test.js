@@ -1,9 +1,9 @@
 var cover = require('../'),
     test = require('tape'),
-    intersect = require('turf-intersect'),
-    merge = require('turf-merge'),
-    erase = require('turf-erase'),
-    area = require('turf-area'),
+    intersect = require('@turf/intersect'),
+    union = require('@turf/union'),
+    erase = require('@turf/difference'),
+    area = require('@turf/area'),
     fs = require('fs');
 
 var REGEN = process.env.REGEN;
@@ -394,7 +394,9 @@ function verifyCover(t, geom, limits) {
     if(emptyTile) console.warn('Empty tile found');
 
     // there should be no geometry not covered by a tile
-    var mergedTiles = merge(tiles);
+    var mergedTiles = tiles.features.reduce(function (merged, feature) {
+        return union(merged, feature);
+    });
     var knockout = erase(geom, mergedTiles);
     if(knockout) {
         // get area of overflow in meters
