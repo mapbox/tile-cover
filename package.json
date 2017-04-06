@@ -7,7 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "eslint index.js && tape test/*.js",
+    "lint": "eslint *.js test/*.js --fix",
+    "test": "npm run lint && tape test/*.js",
     "doc": "dox < index.js | doxme"
   },
   "repository": {
@@ -35,9 +36,16 @@
     "dox": "^0.9.0",
     "doxme": "^1.8.2",
     "eslint": "^3.19.0",
+    "eslint-config-mourner": "^2.0.1",
     "tape": "^4.6.3"
   },
   "dependencies": {
     "@mapbox/tilebelt": "^1.0.1"
+  },
+  "eslintConfig": {
+    "extends": "mourner",
+    "rules": {
+      "camelcase": 0
+    }
   }
 }
