@@ -1,4 +1,4 @@
-var tilebelt = require('tilebelt');
+var tilebelt = require('@mapbox/tilebelt');
 
 /**
  * Given a geometry, create cells and return them in a format easily readable

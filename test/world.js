@@ -1,9 +1,9 @@
 var cover = require('../');
 var test = require('tape');
 var fs = require('fs');
-var intersect = require('turf-intersect');
-var merge = require('turf-merge');
-var erase = require('turf-erase');
+var intersect = require('@turf/intersect');
+var union = require('@turf/union');
+var erase = require('@turf/difference');
 
 var REGEN = process.env.REGEN;
 
@@ -14,15 +14,15 @@ test('the world', function(t){
         if(c.indexOf('_out') === -1) return true;
     });
     countries.forEach(function(countryName){
-        var country = JSON.parse(fs.readFileSync(__dirname+'/fixtures/world/'+ countryName)); 
+        var country = JSON.parse(fs.readFileSync(__dirname+'/fixtures/world/'+ countryName));
         if (country.features.length > 1) throw new Error('Invalid country; more than 1 feature: '+countryName);
         var limits = {
             min_zoom : 1,
             max_zoom : 6
-        };  
+        };
         var countryGeom = country.features[0].geometry; //just the geometry from the country featureCollection
-        var countryCover = cover.geojson(countryGeom, limits); // returns a feature collection of tiles 
-        var countryTiles = countryCover.features; // 
+        var countryCover = cover.geojson(countryGeom, limits); // returns a feature collection of tiles
+        var countryTiles = countryCover.features; //
         t.ok(countryCover, 'Create a cover');
         var emptyTile = false;
         countryTiles.forEach(function(tile){ // 'tile' is one feature object
@@ -31,10 +31,12 @@ test('the world', function(t){
         });
         if(emptyTile) console.warn('Empty tile not found');
 
-        var countryBlock = merge(countryCover);
+        var countryBlock = countryTiles.reduce(function (merged, feature) {
+            return union(merged, feature);
+        });
         var countryBlockGeom = countryBlock.geometry;
         if(!countryBlock) t.fail('Tile merge failed');
-        
+
         var knockout = erase(country.features[0], countryBlock);
         t.deepEqual(knockout, undefined, 'Cover left no exposed geometry');
 
