@@ -1,3 +1,5 @@
+'use strict';
+
 var tilebelt = require('@mapbox/tilebelt');
 
 /**
