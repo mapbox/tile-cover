@@ -40,7 +40,7 @@ test('the world', function (t) {
         if (!countryBlock) t.fail('Tile merge failed');
 
         var knockout = erase(country.features[0], countryBlock);
-        t.deepEqual(knockout, undefined, 'Cover left no exposed geometry');
+        t.deepEqual(knockout, null, 'Cover left no exposed geometry');
 
         compareFixture(t, countryGeom, limits, path.join(__dirname, '/fixtures/world/' + countryName.split('.')[0] + '_out.geojson'));
     });
