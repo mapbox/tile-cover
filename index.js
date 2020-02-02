@@ -166,10 +166,10 @@ function polygonCover(tileHash, tileArray, geom, zoom) {
 
     intersections.sort(compareTiles); // sort by y, then x
 
-    for (i = 0; i < intersections.length; i += 2) {
+    for (i = 1; i < intersections.length; i += 2) { 
         // fill tiles between pairs of intersections
-        y = intersections[i][1];
-        for (var x = intersections[i][0] + 1; x < intersections[i + 1][0]; x++) {
+        y = intersections[i-1][1];
+        for (var x = intersections[i-1][0] + 1; x < intersections[i][0]; x++) {
             var id = toID(x, y, zoom);
             if (!tileHash[id]) {
                 tileArray.push([x, y, zoom]);
