@@ -234,20 +234,16 @@ function lineCover(tileHash, coords, maxZoom, ring) {
 function appendHashTiles(hash, tiles) {
     var keys = Object.keys(hash);
     for (var i = 0; i < keys.length; i++) {
-        tiles.push(fromID(+keys[i]));
+        tiles.push(fromID(keys[i]));
     }
 }
 
 function toID(x, y, z) {
-    var dim = 2 * (1 << z);
-    return ((dim * y + x) * 32) + z;
+    // A packed JS number loses low bits past 2^53, so a zoom 25 tile came back as zoom 24.
+    return x + ',' + y + ',' + z;
 }
 
 function fromID(id) {
-    var z = id % 32,
-        dim = 2 * (1 << z),
-        xy = ((id - z) / 32),
-        x = xy % dim,
-        y = ((xy - x) / dim) % dim;
-    return [x, y, z];
+    var parts = String(id).split(',');
+    return [+parts[0], +parts[1], +parts[2]];
 }
