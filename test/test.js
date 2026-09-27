@@ -1,6 +1,7 @@
 'use strict';
 
 var cover = require('../'),
+    tilebelt = require('@mapbox/tilebelt'),
     test = require('tape'),
     intersect = require('@turf/intersect'),
     union = require('@turf/union'),
@@ -351,6 +352,19 @@ test('0,0 polygon', function (t) {
     t.end();
 });
 
+
+test('zoom 25 multipoint keeps its tile', function (t) {
+    var lng = -0.1276;
+    var lat = 51.5072;
+    var z = 25;
+    var expected = tilebelt.pointToTile(lng, lat, z);
+    var got = cover.tiles({
+        type: 'MultiPoint',
+        coordinates: [[lng, lat]]
+    }, {min_zoom: z, max_zoom: z});
+    t.deepEqual(got, [expected]);
+    t.end();
+});
 
 function compareFixture(t, geom, limits, filepath) {
     var result = cover.geojson(geom, limits);
